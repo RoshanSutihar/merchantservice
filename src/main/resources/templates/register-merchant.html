@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register New Merchant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-card {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .success-card {
+            border-left: 4px solid #198754;
+        }
+        .response-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .secret-key {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card form-card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Register New Merchant
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Error Alert -->
+                    <div th:if="${error}" class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span th:text="${error}"></span>
+                    </div>
+
+                    <!-- Success Response Display -->
+                    <div th:if="${success}" class="card success-card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Merchant Registered Successfully!</h5>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${merchantResponse}">
+                                <div class="response-item">
+                                    <strong>Merchant ID:</strong>
+                                    <span th:text="${merchantResponse.merchantId}" class="text-primary fw-bold"></span>
+                                </div>
+                                <div class="response-item">
+                                    <strong>Store Name:</strong>
+                                    <span th:text="${merchantResponse.storeName}"></span>
+                                </div>
+                                <div class="response-item">
+                                    <strong>Callback URL:</strong>
+                                    <span th:text="${merchantResponse.callbackUrl}"></span>
+                                </div>
+                                <div class="response-item">
+                                    <strong>Status:</strong>
+                                    <span th:text="${merchantResponse.status}" class="badge bg-success"></span>
+                                </div>
+                                <div class="response-item">
+                                    <strong>Commission Type:</strong>
+                                    <span th:text="${merchantResponse.commissionType}"></span>
+                                </div>
+                                <div class="response-item">
+                                    <strong>Commission Value:</strong>
+                                    <span th:text="${merchantResponse.commissionValue}"></span>
+                                </div>
+                                <div class="response-item">
+                                    <strong>Secret Key:</strong>
+                                    <div class="secret-key mt-2">
+                                        <i class="fas fa-key me-2 text-warning"></i>
+                                        <span th:text="${merchantResponse.secretKey}"></span>
+                                    </div>
+                                    <small class="text-danger">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        Save this secret key securely! It cannot be recovered.
+                                    </small>
+                                </div>
+                                <div class="response-item">
+                                    <strong>Message:</strong>
+                                    <span th:text="${merchantResponse.message}"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Registration Form - Show when NOT success -->
+                    <div th:if="${success == null or !success}">
+                        <form th:action="@{/register-merchant}" method="post">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="storeName" class="form-label">Store Name</label>
+                                    <input type="text" class="form-control" id="storeName" name="storeName" th:value="${param.storeName}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="callbackUrl" class="form-label">Callback URL</label>
+                                    <input type="url" class="form-control" id="callbackUrl" name="callbackUrl" th:value="${param.callbackUrl}" placeholder="https://example.com/webhook" required>
+                                </div>
+                            </div>
+
+                            <!-- Bank Account Information -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="bankAccountNumber" class="form-label">Bank Account Number</label>
+                                    <input type="text" class="form-control" id="bankAccountNumber" name="bankAccountNumber" th:value="${param.bankAccountNumber}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="bankRoutingNumber" class="form-label">Routing Number</label>
+                                    <input type="text" class="form-control" id="bankRoutingNumber" name="bankRoutingNumber" th:value="${param.bankRoutingNumber}" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="commissionType" class="form-label">Commission Type</label>
+                                    <select class="form-select" id="commissionType" name="commissionType" required>
+                                        <option value="">Select Type</option>
+                                        <option value="PERCENTAGE" th:selected="${param.commissionType == 'PERCENTAGE'}">Percentage</option>
+
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="commissionValue" class="form-label">Commission Value</label>
+                                    <input type="number" step="0.01" class="form-control" id="commissionValue" name="commissionValue" th:value="${param.commissionValue}" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="minCommission" class="form-label">Min Commission</label>
+                                    <input type="number" step="0.01" class="form-control" id="minCommission" name="minCommission" th:value="${param.minCommission != null ? param.minCommission : '0.00'}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="maxCommission" class="form-label">Max Commission</label>
+                                    <input type="number" step="0.01" class="form-control" id="maxCommission" name="maxCommission" th:value="${param.maxCommission != null ? param.maxCommission : '0.00'}">
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a th:href="@{/}" class="btn btn-secondary me-md-2">
+                                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Register Merchant
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Show "Register Another" button after success -->
+                    <div th:if="${success}" class="text-center mt-4">
+                        <a th:href="@{/register-merchant}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-plus me-2"></i>Register Another Merchant
+                        </a>
+                        <a th:href="@{/}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
