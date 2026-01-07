@@ -1,19 +1,23 @@
-package com.roshansutihar.merchantportal.Request;
+package com.roshansutihar.merchantportal.entity;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
+@Entity
+@Table(name = "merchants")
 @Data
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
-public class MerchantRegistrationRequest {
-    @NotBlank private String storeName;
+public class Merchant {
+
+    @Id
+    private String merchantId;
+    private String siteId;
+    private String storeName;
     private String callbackUrl;
     private String commissionType;
     private BigDecimal commissionValue;

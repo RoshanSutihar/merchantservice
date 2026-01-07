@@ -1,10 +1,9 @@
 package com.roshansutihar.merchantportal.service;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.roshansutihar.merchantportal.Response.MerchantResponse;
-import com.roshansutihar.merchantportal.Response.SummaryResponse;
-import com.roshansutihar.merchantportal.Response.TransactionResponse;
+import com.roshansutihar.merchantportal.response.MerchantResponse;
+import com.roshansutihar.merchantportal.response.SummaryResponse;
+import com.roshansutihar.merchantportal.response.TransactionResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -13,7 +12,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;

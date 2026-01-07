@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Management - QRPay USA Admin Portal</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Purple theme -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'purple-primary': '#764ba2',
+                        'purple-secondary': '#667eea'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white shadow-md">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-purple-primary to-purple-secondary rounded-lg flex items-center justify-center">
+                <i class="fas fa-qrcode text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">QRPay USA</h1>
+                <p class="text-sm text-gray-500">Admin Portal</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-6">
+            <!-- Navigation Menu -->
+            <div class="hidden md:flex space-x-4">
+                <a th:href="@{/register-merchant}"
+                   class="text-gray-700 hover:text-purple-primary px-3 py-2 rounded-lg font-medium transition">
+                    <i class="fas fa-user-plus mr-1"></i> Register Merchant
+                </a>
+                <a th:href="@{/admin/merchants}"
+                   class="bg-purple-primary text-white px-4 py-2 rounded-lg font-medium">
+                    <i class="fas fa-users mr-1"></i> View All Merchants
+                </a>
+            </div>
+
+            <span class="hidden md:inline text-gray-700">
+                Welcome, <span class="font-medium text-purple-primary"
+                               sec:authentication="principal.claims['preferred_username']">Admin</span>
+            </span>
+            <a th:href="@{/logout}"
+               class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center space-x-2 transition">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Registered Merchants</h2>
+            <p class="text-gray-600">View and manage all merchant accounts</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+            <a th:href="@{/register-merchant}"
+               class="inline-flex items-center bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-medium px-6 py-3 rounded-lg hover:opacity-90 transition">
+                <i class="fas fa-user-plus mr-2"></i> Add New Merchant
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow p-6 border-l-4 border-purple-primary">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Merchants</p>
+                    <p class="text-3xl font-bold text-gray-800" th:text="${totalMerchants}">0</p>
+                </div>
+                <i class="fas fa-users text-purple-primary text-3xl"></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow p-6 border-l-4 border-blue-500">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Active Merchants</p>
+                    <p class="text-3xl font-bold text-gray-800" th:text="${totalMerchants}">0</p>
+                </div>
+                <i class="fas fa-store text-blue-500 text-3xl"></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow p-6 border-l-4 border-green-500">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Today's Registrations</p>
+                    <p class="text-3xl font-bold text-gray-800">0</p>
+                </div>
+                <i class="fas fa-calendar-day text-green-500 text-3xl"></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow p-6 border-l-4 border-yellow-500">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">This Month</p>
+                    <p class="text-3xl font-bold text-gray-800">0</p>
+                </div>
+                <i class="fas fa-chart-line text-yellow-500 text-3xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div th:if="${error != null}" class="mb-6">
+        <div class="bg-red-50 border-2 border-red-200 rounded-xl p-6 shadow">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-red-600 text-3xl mr-4"></i>
+                <div>
+                    <h3 class="text-xl font-bold text-red-800">Error Loading Merchants</h3>
+                    <p class="text-red-700 mt-2" th:text="${error}">Error message</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Merchants Table -->
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <h3 class="text-xl font-semibold text-gray-800">All Merchant Accounts</h3>
+                <div class="mt-2 md:mt-0">
+                    <input type="text" placeholder="Search merchants..."
+                           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary focus:border-transparent w-full md:w-64">
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100">
+                <tr>
+                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Site ID</th>
+                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Merchant ID</th>
+                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Store Name</th>
+                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Commission</th>
+                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Bank Account</th>
+                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                <tr th:each="merchant : ${merchants}" class="hover:bg-gray-50 transition">
+                    <td class="py-4 px-6">
+                        <div class="text-center">
+                                <span class="inline-block bg-purple-100 text-purple-800 text-sm font-semibold px-3 py-1 rounded-full">
+                                    <i class="fas fa-id-card mr-1"></i>
+                                    <span th:text="${merchant.siteId}">00000</span>
+                                </span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <code class="text-sm bg-gray-100 px-2 py-1 rounded font-mono" th:text="${merchant.merchantId}">MCH-XXXX</code>
+                    </td>
+                    <td class="py-4 px-6">
+                        <div>
+                            <p class="font-medium text-gray-800" th:text="${merchant.storeName}">Store Name</p>
+                            <p class="text-sm text-gray-500 truncate max-w-xs" th:text="${merchant.callbackUrl}">Callback URL</p>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <div>
+                                <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded mr-2"
+                                      th:text="${merchant.commissionType}">TYPE</span>
+                            <span class="text-gray-800 font-medium" th:text="${merchant.commissionValue}">0.00</span>
+                            <div th:if="${merchant.minCommission != null || merchant.maxCommission != null}" class="text-xs text-gray-500 mt-1">
+                                <span th:if="${merchant.minCommission != null}" th:text="'Min: ' + ${merchant.minCommission}"></span>
+                                <span th:if="${merchant.maxCommission != null}" th:text="' | Max: ' + ${merchant.maxCommission}"></span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="text-sm">
+                            <p class="text-gray-700">
+                                <i class="fas fa-credit-card mr-1"></i>
+                                <span th:text="${merchant.bankAccountNumber}">*****</span>
+                            </p>
+                            <p class="text-gray-500 text-xs mt-1">
+                                Routing: <span th:text="${merchant.bankRoutingNumber}">000000000</span>
+                            </p>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="flex space-x-2">
+                            <button class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition"
+                                    title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-green-600 hover:text-green-800 p-2 rounded-lg hover:bg-green-50 transition"
+                                    title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition"
+                                    title="Delete"
+                                    onclick="confirmDelete('[[${merchant.storeName}]]', '[[${merchant.merchantId}]]')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Empty State -->
+                <tr th:if="${merchants.isEmpty()}">
+                    <td colspan="6" class="py-12 px-6 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                            <i class="fas fa-store text-gray-300 text-5xl mb-4"></i>
+                            <h3 class="text-xl font-semibold text-gray-700 mb-2">No Merchants Found</h3>
+                            <p class="text-gray-500 mb-6">Get started by registering your first merchant</p>
+                            <a th:href="@{/register-merchant}"
+                               class="inline-flex items-center bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-medium px-6 py-3 rounded-lg hover:opacity-90 transition">
+                                <i class="fas fa-user-plus mr-2"></i> Register First Merchant
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-sm text-gray-700 mb-4 md:mb-0">
+                    Showing <span class="font-medium">1</span> to <span class="font-medium" th:text="${totalMerchants}">0</span> of <span class="font-medium" th:text="${totalMerchants}">0</span> merchants
+                </div>
+                <div class="flex space-x-2">
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            disabled>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <button class="px-4 py-2 bg-purple-primary text-white rounded-lg hover:opacity-90">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-white border-t border-gray-200 py-6 mt-8">
+    <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
+        © 2026 QRPay USA. All rights reserved. • Merchant Management System •
+        <span class="font-medium text-purple-primary" th:text="${totalMerchants}">0</span> merchants registered
+    </div>
+</footer>
+
+<!-- JavaScript for delete confirmation -->
+<script>
+    function confirmDelete(storeName, merchantId) {
+        if (confirm(`Are you sure you want to delete merchant "${storeName}" (${merchantId})?\n\nThis action cannot be undone.`)) {
+            // Add your delete logic here
+            alert(`Deleting ${storeName}...`);
+            // You would typically make an AJAX call or redirect to a delete endpoint
+        }
+    }
+
+    // Add search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('input[type="text"]');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('tbody tr');
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

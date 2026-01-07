@@ -1,6 +1,6 @@
-package com.roshansutihar.merchantportal.Response;
+package com.roshansutihar.merchantportal.response;
 
-import com.roshansutihar.merchantportal.Request.Transaction;
+import com.roshansutihar.merchantportal.request.Transaction;
 import lombok.Data;
 
 import java.util.List;

@@ -1,177 +1,239 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register New Merchant</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .form-card {
-            max-width: 600px;
-            margin: 0 auto;
+    <title>Register Merchant - QRPay USA Admin Portal</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Purple theme -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'purple-primary': '#764ba2',
+                        'purple-secondary': '#667eea'
+                    }
+                }
+            }
         }
-        .success-card {
-            border-left: 4px solid #198754;
-        }
-        .response-item {
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .secret-key {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            font-family: monospace;
-            word-break: break-all;
-        }
-    </style>
+    </script>
 </head>
-<body class="bg-light">
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12">
-            <div class="card form-card shadow">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4 class="mb-0">
-                        <i class="fas fa-user-plus me-2"></i>Register New Merchant
-                    </h4>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white shadow-md">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-purple-primary to-purple-secondary rounded-lg flex items-center justify-center">
+                <i class="fas fa-qrcode text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">QRPay USA</h1>
+                <p class="text-sm text-gray-500">Admin Portal</p>
+            </div>
+        </div>
+        <div class="hidden md:flex space-x-4">
+            <a th:href="@{/admin/merchants}"
+               class="text-gray-700 hover:text-purple-primary px-3 py-2 rounded-lg font-medium transition">
+                <i class="fas fa-users mr-1"></i> View All Merchants
+            </a>
+            <a th:href="@{/register-merchant}"
+               class="bg-purple-primary text-white px-4 py-2 rounded-lg font-medium">
+                <i class="fas fa-user-plus mr-1"></i> Register Merchant
+            </a>
+        </div>
+
+        <div class="flex items-center space-x-6">
+            <span class="hidden md:inline text-gray-700">
+                Welcome, <span class="font-medium text-purple-primary"
+                               sec:authentication="principal.claims['preferred_username']">Admin</span>
+            </span>
+            <a th:href="@{/logout}"
+               class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center space-x-2 transition">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 py-10 max-w-5xl">
+    <div class="text-center mb-10">
+        <h2 class="text-4xl font-bold text-gray-800 mb-3">Register New Merchant</h2>
+        <p class="text-lg text-gray-600">Create a new merchant account with secure credentials</p>
+    </div>
+
+    <!-- Success Message -->
+    <div th:if="${success != null}" class="mb-8">
+        <div class="bg-green-50 border-2 border-green-200 rounded-xl p-8 shadow-lg">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-check-circle text-green-600 text-4xl mr-4"></i>
+                <div>
+                    <h3 class="text-2xl font-bold text-green-800">Merchant Registered Successfully!</h3>
+                    <p class="text-green-700 mt-1">Provide these credentials to the merchant.</p>
                 </div>
-                <div class="card-body">
-                    <!-- Error Alert -->
-                    <div th:if="${error}" class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <span th:text="${error}"></span>
+            </div>
+
+            <!-- Credentials Box -->
+            <div class="bg-white rounded-lg p-6 border border-green-100 shadow-md">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="text-center">
+                        <p class="text-gray-600 text-sm uppercase tracking-wider mb-2">Login Username (Site ID)</p>
+                        <p class="text-3xl font-bold text-purple-primary" th:text="${siteId}">00000</p>
                     </div>
-
-                    <!-- Success Response Display -->
-                    <div th:if="${success}" class="card success-card mb-4">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Merchant Registered Successfully!</h5>
-                        </div>
-                        <div class="card-body">
-                            <div th:if="${merchantResponse}">
-                                <div class="response-item">
-                                    <strong>Merchant ID:</strong>
-                                    <span th:text="${merchantResponse.merchantId}" class="text-primary fw-bold"></span>
-                                </div>
-                                <div class="response-item">
-                                    <strong>Store Name:</strong>
-                                    <span th:text="${merchantResponse.storeName}"></span>
-                                </div>
-                                <div class="response-item">
-                                    <strong>Callback URL:</strong>
-                                    <span th:text="${merchantResponse.callbackUrl}"></span>
-                                </div>
-                                <div class="response-item">
-                                    <strong>Status:</strong>
-                                    <span th:text="${merchantResponse.status}" class="badge bg-success"></span>
-                                </div>
-                                <div class="response-item">
-                                    <strong>Commission Type:</strong>
-                                    <span th:text="${merchantResponse.commissionType}"></span>
-                                </div>
-                                <div class="response-item">
-                                    <strong>Commission Value:</strong>
-                                    <span th:text="${merchantResponse.commissionValue}"></span>
-                                </div>
-                                <div class="response-item">
-                                    <strong>Secret Key:</strong>
-                                    <div class="secret-key mt-2">
-                                        <i class="fas fa-key me-2 text-warning"></i>
-                                        <span th:text="${merchantResponse.secretKey}"></span>
-                                    </div>
-                                    <small class="text-danger">
-                                        <i class="fas fa-exclamation-triangle me-1"></i>
-                                        Save this secret key securely! It cannot be recovered.
-                                    </small>
-                                </div>
-                                <div class="response-item">
-                                    <strong>Message:</strong>
-                                    <span th:text="${merchantResponse.message}"></span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="text-center">
+                        <p class="text-gray-600 text-sm uppercase tracking-wider mb-2">Temporary Password</p>
+                        <p class="text-2xl font-mono font-bold text-gray-800 break-all" th:text="${tempPassword}">tempPass123!</p>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Registration Form - Show when NOT success -->
-                    <div th:if="${success == null or !success}">
-                        <form th:action="@{/register-merchant}" method="post">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="storeName" class="form-label">Store Name</label>
-                                    <input type="text" class="form-control" id="storeName" name="storeName" th:value="${param.storeName}" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="callbackUrl" class="form-label">Callback URL</label>
-                                    <input type="url" class="form-control" id="callbackUrl" name="callbackUrl" th:value="${param.callbackUrl}" placeholder="https://example.com/webhook" required>
-                                </div>
-                            </div>
+            <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start">
+                <i class="fas fa-exclamation-triangle text-yellow-600 text-xl mr-3 mt-0.5"></i>
+                <div>
+                    <p class="text-yellow-800 font-medium">Important:</p>
+                    <p class="text-yellow-700">The merchant <strong>MUST change this password</strong> on first login for security.</p>
+                </div>
+            </div>
 
-                            <!-- Bank Account Information -->
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="bankAccountNumber" class="form-label">Bank Account Number</label>
-                                    <input type="text" class="form-control" id="bankAccountNumber" name="bankAccountNumber" th:value="${param.bankAccountNumber}" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="bankRoutingNumber" class="form-label">Routing Number</label>
-                                    <input type="text" class="form-control" id="bankRoutingNumber" name="bankRoutingNumber" th:value="${param.bankRoutingNumber}" required>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="commissionType" class="form-label">Commission Type</label>
-                                    <select class="form-select" id="commissionType" name="commissionType" required>
-                                        <option value="">Select Type</option>
-                                        <option value="PERCENTAGE" th:selected="${param.commissionType == 'PERCENTAGE'}">Percentage</option>
-
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="commissionValue" class="form-label">Commission Value</label>
-                                    <input type="number" step="0.01" class="form-control" id="commissionValue" name="commissionValue" th:value="${param.commissionValue}" required>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="minCommission" class="form-label">Min Commission</label>
-                                    <input type="number" step="0.01" class="form-control" id="minCommission" name="minCommission" th:value="${param.minCommission != null ? param.minCommission : '0.00'}">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="maxCommission" class="form-label">Max Commission</label>
-                                    <input type="number" step="0.01" class="form-control" id="maxCommission" name="maxCommission" th:value="${param.maxCommission != null ? param.maxCommission : '0.00'}">
-                                </div>
-                            </div>
-
-                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <a th:href="@{/}" class="btn btn-secondary me-md-2">
-                                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-2"></i>Register Merchant
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Show "Register Another" button after success -->
-                    <div th:if="${success}" class="text-center mt-4">
-                        <a th:href="@{/register-merchant}" class="btn btn-outline-primary me-2">
-                            <i class="fas fa-plus me-2"></i>Register Another Merchant
-                        </a>
-                        <a th:href="@{/}" class="btn btn-primary">
-                            <i class="fas fa-home me-2"></i>Back to Dashboard
-                        </a>
-                    </div>
+            <!-- Optional: Merchant API Response -->
+            <div th:if="${merchantResponse != null}" class="mt-8 pt-6 border-t border-green-100">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">API Response Details</h4>
+                <div class="bg-gray-50 rounded-lg p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div><span class="text-gray-500">Merchant ID:</span> <span class="font-medium" th:text="${merchantResponse.merchantId}">MCH-XXXX</span></div>
+                    <div><span class="text-gray-500">Store Name:</span> <span class="font-medium" th:text="${merchantResponse.storeName}">Store</span></div>
+                    <div class="md:col-span-2"><span class="text-gray-500">Callback URL:</span> <span class="font-medium truncate block" th:text="${merchantResponse.callbackUrl}">https://...</span></div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Error Message -->
+    <div th:if="${error != null}" class="mb-8">
+        <div class="bg-red-50 border-2 border-red-200 rounded-xl p-6 shadow">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-red-600 text-3xl mr-4"></i>
+                <div>
+                    <h3 class="text-xl font-bold text-red-800">Registration Failed</h3>
+                    <p class="text-red-700 mt-2" th:text="${error}">Error message</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Form -->
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div class="p-8 md:p-10">
+            <form th:action="@{/register-merchant}" method="post" class="space-y-10">
+
+                <!-- Store Info -->
+                <section>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-store text-purple-primary mr-3"></i> Store Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Store Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="storeName" required
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary focus:border-transparent"
+                                   placeholder="My Awesome Store">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Callback URL <span class="text-red-500">*</span></label>
+                            <input type="url" name="callbackUrl" required
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary focus:border-transparent"
+                                   placeholder="https://example.com/webhook">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Commission -->
+                <section>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-percentage text-purple-primary mr-3"></i> Commission Settings
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Type <span class="text-red-500">*</span></label>
+                            <select name="commissionType" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary">
+                                <option value="">Select...</option>
+                                <option value="PERCENTAGE">Percentage</option>
+                                <option value="FIXED">Fixed Amount</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Value <span class="text-red-500">*</span></label>
+                            <input type="number" name="commissionValue" required step="0.01" min="0"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary"
+                                   placeholder="2.50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Min (Optional)</label>
+                            <input type="number" name="minCommission" step="0.01" min="0"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary"
+                                   placeholder="0.30">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Max (Optional)</label>
+                            <input type="number" name="maxCommission" step="0.01" min="0"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary"
+                                   placeholder="10.00">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Bank Info -->
+                <section>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-university text-purple-primary mr-3"></i> Bank Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Account Number <span class="text-red-500">*</span></label>
+                            <input type="text" name="bankAccountNumber" required pattern="[0-9]{5,17}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary"
+                                   placeholder="1234567890" maxlength="17">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Routing Number <span class="text-red-500">*</span></label>
+                            <input type="text" name="bankRoutingNumber" required pattern="[0-9]{9}" maxlength="9"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary"
+                                   placeholder="123456789">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Submit -->
+                <div class="pt-8 border-t border-gray-200 text-center">
+                    <button type="submit"
+                            class="inline-flex items-center bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-bold text-lg px-10 py-4 rounded-xl hover:opacity-90 transform hover:scale-105 transition duration-300 shadow-xl">
+                        <i class="fas fa-user-plus mr-3"></i>
+                        Register Merchant
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-white border-t border-gray-200 py-6 mt-16">
+    <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
+        © 2026 QRPay USA. All rights reserved. • Secure Admin Portal •
+        Logged in as: <span class="font-medium text-purple-primary"
+                            sec:authentication="principal.claims['preferred_username']">Admin</span>
+    </div>
+</footer>
+
 </body>
 </html>

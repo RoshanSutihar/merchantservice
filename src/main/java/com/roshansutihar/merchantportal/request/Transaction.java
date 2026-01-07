@@ -1,4 +1,4 @@
-package com.roshansutihar.merchantportal.Request;
+package com.roshansutihar.merchantportal.request;
 
 import lombok.Data;
 
