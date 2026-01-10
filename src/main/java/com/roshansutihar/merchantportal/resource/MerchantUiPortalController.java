@@ -261,9 +261,15 @@ public class MerchantUiPortalController {
             // === Generate unique 5-digit siteId ===
             String siteId = siteIdGeneratorService.generateUniqueSiteId();
 
-            // === Save to local database ===
+            // Mask the secret key: show only the last 8 characters
+            String fullSecretKey = response.getSecretKey();
+            String maskedSecretKey = fullSecretKey != null && fullSecretKey.length() > 8
+                    ? "••••••••" + fullSecretKey.substring(fullSecretKey.length() - 8)
+                    : "••••••••";
+
+            // === Save to local database (only masked version) ===
             Merchant merchant = new Merchant();
-            merchant.setMerchantId(response.getMerchantId()); // adjust if getter name differs
+            merchant.setMerchantId(response.getMerchantId());
             merchant.setSiteId(siteId);
             merchant.setStoreName(storeName.trim());
             merchant.setCallbackUrl(callbackUrl.trim());
@@ -273,19 +279,24 @@ public class MerchantUiPortalController {
             merchant.setMaxCommission(maxCommissionBd);
             merchant.setBankAccountNumber(cleanedAccountNumber);
             merchant.setBankRoutingNumber(cleanedRoutingNumber);
+            merchant.setSecretKey(maskedSecretKey);  // Store only masked version
 
             merchantRepository.save(merchant);
 
             // === Generate temporary password ===
-            String tempPassword = generateTempPassword();
+            String tempPassword = "admin123";
 
             // === Create user in Keycloak (username = siteId) ===
             keycloakAdminService.createMerchantUser(siteId, tempPassword);
+
+            // === Pass full secret key to view (one-time display only) ===
+            model.addAttribute("fullSecretKey", fullSecretKey);
 
             // === Success message with credentials ===
             model.addAttribute("merchantResponse", response);
             model.addAttribute("siteId", siteId);
             model.addAttribute("tempPassword", tempPassword);
+            model.addAttribute("fullSecretKey", fullSecretKey);
             model.addAttribute("success", "Merchant registered successfully!<br><br>" +
                     "<strong>Login Username (Site ID):</strong> " + siteId + "<br>" +
                     "<strong>Temporary Password:</strong> " + tempPassword + "<br><br>" +

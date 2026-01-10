@@ -27,10 +27,10 @@
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
-
 <!-- Header -->
 <header class="sticky top-0 z-50 bg-white shadow-md">
     <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <!-- Logo -->
         <div class="flex items-center space-x-3">
             <div class="w-10 h-10 bg-gradient-to-r from-purple-primary to-purple-secondary rounded-lg flex items-center justify-center">
                 <i class="fas fa-qrcode text-white text-xl"></i>
@@ -40,24 +40,37 @@
                 <p class="text-sm text-gray-500">Admin Portal</p>
             </div>
         </div>
-        <div class="hidden md:flex space-x-4">
-            <a th:href="@{/admin/merchants}"
-               class="text-gray-700 hover:text-purple-primary px-3 py-2 rounded-lg font-medium transition">
-                <i class="fas fa-users mr-1"></i> View All Merchants
-            </a>
-            <a th:href="@{/register-merchant}"
-               class="bg-purple-primary text-white px-4 py-2 rounded-lg font-medium">
-                <i class="fas fa-user-plus mr-1"></i> Register Merchant
-            </a>
-        </div>
 
+        <!-- Right Side: Navigation + Welcome + Logout -->
         <div class="flex items-center space-x-6">
-            <span class="hidden md:inline text-gray-700">
-                Welcome, <span class="font-medium text-purple-primary"
-                               sec:authentication="principal.claims['preferred_username']">Admin</span>
+            <!-- Navigation Menu -->
+            <div class="hidden md:flex space-x-4">
+                <a th:href="@{/admin/merchants}"
+                   class="text-gray-700 hover:bg-purple-primary hover:text-white px-5 py-2.5 rounded-lg font-medium transition duration-200">
+                    <i class="fas fa-users mr-2"></i> View All Merchants
+                </a>
+
+                <a th:href="@{/register-merchant}"
+                   class="bg-purple-primary text-white px-5 py-2.5 rounded-lg font-medium shadow-md transition duration-200">
+                    <i class="fas fa-user-plus mr-2"></i> Register Merchant
+                </a>
+
+                <a th:href="@{/admin/transactions}"
+                   class="text-gray-700 hover:bg-purple-primary hover:text-white px-5 py-2.5 rounded-lg font-medium transition duration-200">
+                    <i class="fas fa-exchange-alt mr-2"></i> View Transactions
+                </a>
+            </div>
+
+            <!-- Welcome Message -->
+            <span class="text-gray-700 hidden lg:inline">
+                Welcome,
+                <span class="font-medium text-purple-primary"
+                      sec:authentication="principal.claims['preferred_username']">Admin</span>
             </span>
+
+            <!-- Logout Button -->
             <a th:href="@{/logout}"
-               class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center space-x-2 transition">
+               class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center space-x-2 transition duration-200">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
             </a>
@@ -93,6 +106,27 @@
                     <div class="text-center">
                         <p class="text-gray-600 text-sm uppercase tracking-wider mb-2">Temporary Password</p>
                         <p class="text-2xl font-mono font-bold text-gray-800 break-all" th:text="${tempPassword}">tempPass123!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secret Key - Shown ONLY ONCE -->
+            <div class="mt-8 bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6">
+                <div class="flex items-start">
+                    <i class="fas fa-key text-yellow-600 text-3xl mr-4 mt-1"></i>
+                    <div class="flex-1">
+                        <h4 class="text-xl font-bold text-yellow-900 mb-2">Merchant Secret Key (Shown Only Once)</h4>
+                        <p class="text-yellow-800 mb-4">
+                            This key is critical for API access and webhook verification.
+                            <strong>Copy it now</strong> — it will never be shown again.
+                        </p>
+                        <div class="bg-white p-5 rounded-lg border-2 border-yellow-300 font-mono text-lg break-all shadow-inner">
+                            <span th:text="${fullSecretKey}">sk_live_xxxxxxxxxxxxxxxxxxxxxxxx</span>
+                        </div>
+                        <p class="text-yellow-900 text-sm mt-4 flex items-center">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Warning:</strong> After leaving this page, this key cannot be retrieved. Save it securely.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -201,13 +235,13 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Account Number <span class="text-red-500">*</span></label>
                             <input type="text" name="bankAccountNumber" required pattern="[0-9]{5,17}"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary focus:border-transparent"
                                    placeholder="1234567890" maxlength="17">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Routing Number <span class="text-red-500">*</span></label>
                             <input type="text" name="bankRoutingNumber" required pattern="[0-9]{9}" maxlength="9"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-primary focus:border-transparent"
                                    placeholder="123456789">
                         </div>
                     </div>

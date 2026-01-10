@@ -86,7 +86,7 @@
             <div>
                 <p class="text-gray-500 text-sm">Commission</p>
                 <p class="text-lg font-semibold text-gray-800"
-                   th:text="${merchant?.commissionType} + ' - ' + ${merchant?.commissionValue} ?: 'Not set'">Fixed - 2.5%</p>
+                   th:text="${merchant?.commissionType != null ? merchant.commissionType + ' - ' + merchant.commissionValue : 'Not set'}">Fixed - 2.5%</p>
             </div>
             <div>
                 <p class="text-gray-500 text-sm">Bank Account</p>
@@ -108,7 +108,7 @@
             <div class="flex justify-between items-start">
                 <div>
                     <p class="text-sm opacity-90">Today's Transactions</p>
-                    <p class="text-3xl font-bold mt-2" th:text="${summary != null and summary.todaysCount != null} ? ${summary.todaysCount} : '0'">0</p>
+                    <p class="text-3xl font-bold mt-2" th:text="${summary?.todaysCount} ?: '0'">0</p>
                 </div>
                 <div class="bg-white bg-opacity-20 p-3 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +124,7 @@
                 <div>
                     <p class="text-gray-500 text-sm">Today's Sales</p>
                     <p class="text-3xl font-bold text-gray-800 mt-2"
-                       th:text="${summary != null and summary.todaysSales != null} ? '$' + ${summary.todaysSales} : '$0.00'">$0.00</p>
+                       th:text="${summary?.todaysSales != null} ? '$' + ${summary.todaysSales} : '$0.00'">$0.00</p>
                 </div>
                 <div class="bg-purple-50 p-3 rounded-lg">
                     <svg class="w-6 h-6 text-purple-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,7 +140,7 @@
                 <div>
                     <p class="text-gray-500 text-sm">Pending</p>
                     <p class="text-3xl font-bold text-gray-800 mt-2"
-                       th:text="${summary != null and summary.pendingCount != null} ? ${summary.pendingCount} : '0'">0</p>
+                       th:text="${summary?.pendingCount} ?: '0'">0</p>
                 </div>
                 <div class="bg-yellow-50 p-3 rounded-lg">
                     <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,7 +156,7 @@
                 <div>
                     <p class="text-gray-500 text-sm">Monthly Total</p>
                     <p class="text-3xl font-bold text-gray-800 mt-2"
-                       th:text="${summary != null and summary.monthlyTotal != null} ? ${summary.monthlyTotal} : '0'">0</p>
+                       th:text="${summary?.monthlyTotal} ?: '0'">0</p>
                 </div>
                 <div class="bg-green-50 p-3 rounded-lg">
                     <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +202,9 @@
                     </button>
                 </form>
 
-                <div th:if="${transactions != null and !transactions.isEmpty()}" class="overflow-x-auto">
+                <!-- Fixed: Check transactions.transactions list -->
+                <div th:if="${transactions != null and transactions.transactions != null and !#lists.isEmpty(transactions.transactions)}"
+                     class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead>
                         <tr class="bg-gray-50">
@@ -214,7 +216,8 @@
                         </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                        <tr th:each="tx : ${transactions}">
+                        <!-- Fixed: Iterate over transactions.transactions -->
+                        <tr th:each="tx : ${transactions.transactions}">
                             <td class="px-4 py-3 text-sm text-gray-800" th:text="${tx?.dateTime} ?: 'N/A'">2024-01-01 10:30</td>
                             <td class="px-4 py-3 text-sm font-medium text-gray-900" th:text="${tx?.transactionId} ?: 'N/A'">TXN-12345</td>
                             <td class="px-4 py-3 text-sm text-gray-800" th:text="${tx?.amount != null} ? '$' + ${tx.amount} : 'N/A'">$100.00</td>
@@ -232,13 +235,16 @@
                         </tbody>
                     </table>
                 </div>
-                <div th:if="${transactions == null or transactions.isEmpty()}" class="text-center text-gray-500 py-8">
+
+                <!-- Fixed empty state -->
+                <div th:if="${transactions == null or transactions.transactions == null or #lists.isEmpty(transactions.transactions)}"
+                     class="text-center text-gray-500 py-8">
                     No transactions found for today
                 </div>
             </div>
 
             <!-- Date Range Tab -->
-            <div x-show="activeTab === 'range'" x-transition style="display: none;">
+            <div x-show="activeTab === 'range'" x-transition>
                 <form th:action="@{/transactions/range}" method="post" class="space-y-6">
                     <input type="hidden" name="merchantId" th:value="${selectedMerchant}" />
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -271,7 +277,7 @@
             </div>
 
             <!-- Summary Tab -->
-            <div x-show="activeTab === 'summary'" x-transition style="display: none;">
+            <div x-show="activeTab === 'summary'" x-transition>
                 <form th:action="@{/transactions/summary}" method="post" class="space-y-6 mb-8">
                     <input type="hidden" name="merchantId" th:value="${selectedMerchant}" />
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -298,17 +304,17 @@
                         <div class="bg-white p-4 rounded-lg shadow">
                             <p class="text-gray-500 text-sm">Total Transactions</p>
                             <p class="text-2xl font-bold text-gray-800 mt-1"
-                               th:text="${summary.totalTransactions != null} ? ${summary.totalTransactions} : '0'">0</p>
+                               th:text="${summary?.totalTransactions} ?: '0'">0</p>
                         </div>
                         <div class="bg-white p-4 rounded-lg shadow">
                             <p class="text-gray-500 text-sm">Total Amount</p>
                             <p class="text-2xl font-bold text-gray-800 mt-1"
-                               th:text="${summary.totalAmount != null} ? '$' + ${summary.totalAmount} : '$0.00'">$0.00</p>
+                               th:text="${summary?.totalAmount != null} ? '$' + ${summary.totalAmount} : '$0.00'">$0.00</p>
                         </div>
                         <div class="bg-white p-4 rounded-lg shadow">
                             <p class="text-gray-500 text-sm">Average Transaction</p>
                             <p class="text-2xl font-bold text-gray-800 mt-1"
-                               th:text="${summary.averageAmount != null} ? '$' + ${summary.averageAmount} : '$0.00'">$0.00</p>
+                               th:text="${summary?.averageAmount != null} ? '$' + ${summary.averageAmount} : '$0.00'">$0.00</p>
                         </div>
                     </div>
                 </div>
@@ -322,7 +328,7 @@
     <div class="container mx-auto px-4">
         <div class="flex flex-col md:flex-row justify-between items-center">
             <p class="text-gray-500 text-sm mb-2 md:mb-0">
-                © 2024 QRPay USA. All rights reserved.
+                © 2026 QRPay USA. All rights reserved.
             </p>
             <p class="text-gray-500 text-sm">
                 Site ID: <span sec:authentication="name" class="font-medium text-purple-primary">01234</span>

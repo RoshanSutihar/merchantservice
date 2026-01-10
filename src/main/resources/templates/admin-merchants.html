@@ -45,12 +45,18 @@
             <!-- Navigation Menu -->
             <div class="hidden md:flex space-x-4">
                 <a th:href="@{/register-merchant}"
-                   class="text-gray-700 hover:text-purple-primary px-3 py-2 rounded-lg font-medium transition">
-                    <i class="fas fa-user-plus mr-1"></i> Register Merchant
+                   class="text-gray-700 hover:bg-purple-primary hover:text-white px-5 py-2.5 rounded-lg font-medium transition duration-200">
+                    <i class="fas fa-user-plus mr-2"></i> Register Merchant
                 </a>
+
                 <a th:href="@{/admin/merchants}"
-                   class="bg-purple-primary text-white px-4 py-2 rounded-lg font-medium">
-                    <i class="fas fa-users mr-1"></i> View All Merchants
+                   class="bg-purple-primary text-white px-5 py-2.5 rounded-lg font-medium shadow-md transition duration-200">
+                    <i class="fas fa-users mr-2"></i> View All Merchants
+                </a>
+
+                <a th:href="@{/admin/transactions}"
+                   class="text-gray-700 hover:bg-purple-primary hover:text-white px-5 py-2.5 rounded-lg font-medium transition duration-200">
+                    <i class="fas fa-exchange-alt mr-2"></i> View Transactions
                 </a>
             </div>
 
@@ -103,24 +109,6 @@
                 <i class="fas fa-store text-blue-500 text-3xl"></i>
             </div>
         </div>
-        <div class="bg-white rounded-xl shadow p-6 border-l-4 border-green-500">
-            <div class="flex justify-between items-center">
-                <div>
-                    <p class="text-gray-500 text-sm">Today's Registrations</p>
-                    <p class="text-3xl font-bold text-gray-800">0</p>
-                </div>
-                <i class="fas fa-calendar-day text-green-500 text-3xl"></i>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl shadow p-6 border-l-4 border-yellow-500">
-            <div class="flex justify-between items-center">
-                <div>
-                    <p class="text-gray-500 text-sm">This Month</p>
-                    <p class="text-3xl font-bold text-gray-800">0</p>
-                </div>
-                <i class="fas fa-chart-line text-yellow-500 text-3xl"></i>
-            </div>
-        </div>
     </div>
 
     <!-- Error Message -->
@@ -157,6 +145,7 @@
                     <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Store Name</th>
                     <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Commission</th>
                     <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Bank Account</th>
+                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Secret Key</th>
                     <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                 </tr>
                 </thead>
@@ -164,10 +153,10 @@
                 <tr th:each="merchant : ${merchants}" class="hover:bg-gray-50 transition">
                     <td class="py-4 px-6">
                         <div class="text-center">
-                                <span class="inline-block bg-purple-100 text-purple-800 text-sm font-semibold px-3 py-1 rounded-full">
-                                    <i class="fas fa-id-card mr-1"></i>
-                                    <span th:text="${merchant.siteId}">00000</span>
-                                </span>
+                            <span class="inline-block bg-purple-100 text-purple-800 text-sm font-semibold px-3 py-1 rounded-full">
+                                <i class="fas fa-id-card mr-1"></i>
+                                <span th:text="${merchant.siteId}">00000</span>
+                            </span>
                         </div>
                     </td>
                     <td class="py-4 px-6">
@@ -181,8 +170,8 @@
                     </td>
                     <td class="py-4 px-6">
                         <div>
-                                <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded mr-2"
-                                      th:text="${merchant.commissionType}">TYPE</span>
+                            <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded mr-2"
+                                  th:text="${merchant.commissionType}">TYPE</span>
                             <span class="text-gray-800 font-medium" th:text="${merchant.commissionValue}">0.00</span>
                             <div th:if="${merchant.minCommission != null || merchant.maxCommission != null}" class="text-xs text-gray-500 mt-1">
                                 <span th:if="${merchant.minCommission != null}" th:text="'Min: ' + ${merchant.minCommission}"></span>
@@ -201,28 +190,28 @@
                             </p>
                         </div>
                     </td>
+                    <!-- Masked Secret Key Column -->
                     <td class="py-4 px-6">
-                        <div class="flex space-x-2">
-                            <button class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition"
-                                    title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="text-green-600 hover:text-green-800 p-2 rounded-lg hover:bg-green-50 transition"
-                                    title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition"
-                                    title="Delete"
-                                    onclick="confirmDelete('[[${merchant.storeName}]]', '[[${merchant.merchantId}]]')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                        <div class="font-mono text-sm text-gray-700">
+                            <span th:if="${merchant.secretKey != null and merchant.secretKey.length() > 8}"
+                                  th:text="'••••••••' + ${merchant.secretKey.substring(merchant.secretKey.length() - 8)}">••••••••abcd1234</span>
+                            <span th:if="${merchant.secretKey != null and merchant.secretKey.length() <= 8}"
+                                  th:text="'••••••••' + ${merchant.secretKey}">••••••••</span>
+                            <span th:if="${merchant.secretKey == null}" class="text-gray-400 italic">Not set</span>
                         </div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <a th:href="@{'/admin/merchants/' + ${merchant.merchantId} + '/edit'}"
+                           class="text-green-600 hover:text-green-800 p-2 rounded-lg hover:bg-green-50 transition inline-block"
+                           title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
                     </td>
                 </tr>
 
                 <!-- Empty State -->
                 <tr th:if="${merchants.isEmpty()}">
-                    <td colspan="6" class="py-12 px-6 text-center">
+                    <td colspan="7" class="py-12 px-6 text-center">
                         <div class="flex flex-col items-center justify-center">
                             <i class="fas fa-store text-gray-300 text-5xl mb-4"></i>
                             <h3 class="text-xl font-semibold text-gray-700 mb-2">No Merchants Found</h3>
@@ -268,13 +257,6 @@
 
 <!-- JavaScript for delete confirmation -->
 <script>
-    function confirmDelete(storeName, merchantId) {
-        if (confirm(`Are you sure you want to delete merchant "${storeName}" (${merchantId})?\n\nThis action cannot be undone.`)) {
-            // Add your delete logic here
-            alert(`Deleting ${storeName}...`);
-            // You would typically make an AJAX call or redirect to a delete endpoint
-        }
-    }
 
     // Add search functionality
     document.addEventListener('DOMContentLoaded', function() {

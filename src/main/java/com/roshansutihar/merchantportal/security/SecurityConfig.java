@@ -4,6 +4,7 @@ package com.roshansutihar.merchantportal.security;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,15 +35,29 @@ public class SecurityConfig {
     public SecurityConfig(ClientRegistrationRepository clientRegistrationRepository) {
         this.clientRegistrationRepository = clientRegistrationRepository;
     }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
+                        // Public static resources
                         .requestMatchers("/", "/home", "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                        .requestMatchers("/register-merchant", "/register-merchant/**", "/admin/merchants").hasRole("ADMIN")
+
+                        // Merchant editing endpoints (Admin only) - NOTE: Using path variables
+                        .requestMatchers("/admin/merchants/*/edit").hasRole("ADMIN")
+                        .requestMatchers("/admin/merchants/*/update-bank").hasRole("ADMIN")
+                        .requestMatchers("/admin/merchants/*/rotate-secret").hasRole("ADMIN")
+
+                        // Other admin endpoints
+                        .requestMatchers("/register-merchant", "/register-merchant/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/merchants").hasRole("ADMIN")
+                        .requestMatchers("/admin/transactions").hasRole("ADMIN")
+
+                        // General admin pattern (catch-all for other /admin/** routes)
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
 

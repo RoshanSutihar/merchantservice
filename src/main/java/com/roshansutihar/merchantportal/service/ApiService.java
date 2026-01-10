@@ -2,6 +2,7 @@ package com.roshansutihar.merchantportal.service;
 
 
 import com.roshansutihar.merchantportal.response.MerchantResponse;
+import com.roshansutihar.merchantportal.response.SecretRotationResponse;
 import com.roshansutihar.merchantportal.response.SummaryResponse;
 import com.roshansutihar.merchantportal.response.TransactionResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -78,5 +79,27 @@ public class ApiService {
             throw new RuntimeException("Failed to register merchant: " + response.getStatusCode());
         }
         return response.getBody();
+    }
+
+    public String rotateSecretKey(String merchantId) {
+        String url = baseUrl + "/api/v1/merchants/" + merchantId + "/rotate-secret";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<SecretRotationResponse> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                SecretRotationResponse.class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("Failed to rotate secret key: " + response.getStatusCode());
+        }
+
+        return response.getBody().getNewSecretKey();
     }
 }
