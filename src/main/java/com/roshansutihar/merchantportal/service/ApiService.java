@@ -20,7 +20,7 @@ import java.util.Map;
 @Service
 public class ApiService {
 
-    @Value("${app.api.base-url}")
+    @Value("${PAYMENTS_CORE_BASE_URL}")
     private String baseUrl;
 
     private final RestTemplate restTemplate;
