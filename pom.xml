@@ -11,7 +11,8 @@
 	<groupId>com.roshansutihar</groupId>
 	<artifactId>merchantportal</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>merchantportal</name>
+    <packaging>jar</packaging>
+    <name>merchantportal</name>
 	<description>Merchant portal for my capstone project</description>
 	<url/>
 	<licenses>
@@ -20,7 +21,7 @@
 	<developers>
 		<developer/>
 	</developers>
-	<scm>
+    <scm>
 		<connection/>
 		<developerConnection/>
 		<tag/>
