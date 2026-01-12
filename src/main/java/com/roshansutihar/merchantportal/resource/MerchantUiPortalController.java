@@ -1,6 +1,7 @@
 package com.roshansutihar.merchantportal.resource;
 
 
+import com.roshansutihar.merchantportal.dto.DashboardSummary;
 import com.roshansutihar.merchantportal.entity.Merchant;
 import com.roshansutihar.merchantportal.repository.MerchantRepository;
 import com.roshansutihar.merchantportal.response.MerchantResponse;
@@ -92,8 +93,7 @@ public class MerchantUiPortalController {
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(granted -> {
                     String authority = granted.getAuthority();
-                    return authority.equals("ROLE_ADMIN") ||
-                            authority.toUpperCase().contains("ADMIN");
+                    return authority.equals("ROLE_ADMIN") || authority.toUpperCase().contains("ADMIN");
                 });
 
         log.info("User role check - Is ADMIN? {}", isAdmin);
@@ -108,9 +108,7 @@ public class MerchantUiPortalController {
         log.info("Loading dashboard for merchant siteId: {}", siteId);
 
         try {
-            log.debug("Looking up merchant by siteId: {}", siteId);
             Optional<Merchant> merchantOpt = merchantRepository.findBySiteId(siteId);
-
             if (merchantOpt.isEmpty()) {
                 log.warn("No merchant found in database for siteId: {}", siteId);
                 model.addAttribute("error", "Merchant profile not found. Please contact support.");
@@ -124,36 +122,59 @@ public class MerchantUiPortalController {
             model.addAttribute("merchant", merchant);
             model.addAttribute("selectedMerchant", merchantId);
 
-            log.info("Automatically fetching today's transactions for merchantId: {}", merchantId);
+            // Today's transactions list (for the table)
             TransactionResponse todayTransactions = apiService.getTodayTransactions(merchantId);
-
-            // ─────────────────────────────────────────────────────────────
-            // TEMPORARY LOGGING - REMOVE LATER WHEN YOU'VE SEEN THE STRUCTURE
-            if (todayTransactions != null && todayTransactions.getTransactions() != null) {
-                int count = todayTransactions.getTransactions().size();
-                log.info("Today's transactions fetched - {} items", count);
-
-                if (count > 0) {
-                    log.info("===== TRANSACTION STRUCTURE (first one) =====");
-                    log.info("Transaction 1: {}", todayTransactions.getTransactions().get(0));
-                    log.info("===== END OF TRANSACTION STRUCTURE =====");
-                }
-
-                if (count >= 2) {
-                    log.info("===== TRANSACTION STRUCTURE (second one) =====");
-                    log.info("Transaction 2: {}", todayTransactions.getTransactions().get(1));
-                    log.info("===== END OF TRANSACTION STRUCTURE =====");
-                }
-            } else {
-                log.info("No transactions returned today (or null response)");
-            }
-            // ─────────────────────────────────────────────────────────────
-
             model.addAttribute("transactions", todayTransactions);
 
+            // Summary data
+            LocalDate today = LocalDate.now();
+            LocalDate monthStart = today.withDayOfMonth(1);
+
+            // Today's summary
+            SummaryResponse todaySummary = apiService.getSummary(merchantId, today, today);
+
+            // This month's summary
+            SummaryResponse monthSummary = apiService.getSummary(merchantId, monthStart, today);
+
+            // Build dashboard summary
+            DashboardSummary summary = new DashboardSummary();
+
+            // Today's Transactions Count
+            summary.setTodaysTransactionCount(
+                    todaySummary.getTotalTransactions() != null
+                            ? todaySummary.getTotalTransactions()
+                            : 0L
+            );
+
+            // Today's Sales (gross amount)
+            summary.setTodaysSales(
+                    todaySummary.getTotalAmount() != null
+                            ? BigDecimal.valueOf(todaySummary.getTotalAmount())
+                            : BigDecimal.ZERO
+            );
+
+            // Acknowledged count → fallback to counting from today's transactions list
+            long acknowledgedCount = 0L;
+            if (todayTransactions != null && todayTransactions.getTransactions() != null) {
+                acknowledgedCount = todayTransactions.getTransactions().stream()
+                        .filter(tx -> "ACKNOWLEDGED".equalsIgnoreCase(tx.getStatus()))
+                        .count();
+            }
+            summary.setAcknowledgedCount(acknowledgedCount);
+
+            // Monthly Total (gross amount this month)
+            summary.setMonthlyTotal(
+                    monthSummary.getTotalAmount() != null
+                            ? BigDecimal.valueOf(monthSummary.getTotalAmount())
+                            : BigDecimal.ZERO
+            );
+
+            model.addAttribute("summary", summary);
+
+            // Form defaults
             model.addAttribute("view", "today");
-            model.addAttribute("fromDate", LocalDate.now());
-            model.addAttribute("toDate", LocalDate.now());
+            model.addAttribute("fromDate", today);
+            model.addAttribute("toDate", today);
             model.addAttribute("selectedStatus", "");
 
             log.info("Dashboard data prepared - rendering template");
