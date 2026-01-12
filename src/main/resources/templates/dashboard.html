@@ -74,28 +74,35 @@
 
     <!-- Quick Stats -->
     <div class="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <!-- Today's Transactions -->
         <div class="bg-gradient-to-r from-purple-primary to-purple-secondary text-white rounded-xl shadow-lg p-6">
             <p class="text-sm opacity-90">Today's Transactions</p>
-            <p class="text-3xl font-bold mt-2" th:text="${summary?.todaysCount} ?: '0'">0</p>
+            <p class="text-3xl font-bold mt-2"
+               th:text="${summary?.todaysTransactionCount} ?: '0'">0</p>
         </div>
 
+        <!-- Today's Sales -->
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <p class="text-gray-500 text-sm">Today's Sales</p>
             <p class="text-3xl font-bold text-gray-800 mt-2"
                th:text="${summary?.todaysSales != null} ? '$' + ${#numbers.formatDecimal(summary.todaysSales, 0, 2, 'COMMA')} : '$0.00'">$0.00</p>
         </div>
 
+        <!-- Acknowledged -->
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <p class="text-gray-500 text-sm">Settled Today</p>
-            <p class="text-3xl font-bold text-green-600 mt-2"
-               th:text="${summary?.settledToday != null} ? '$' + ${#numbers.formatDecimal(summary.settledToday, 0, 2, 'COMMA')} : '$0.00'">$0.00</p>
+            <p class="text-gray-500 text-sm">Acknowledged</p>
+            <p class="text-3xl font-bold text-blue-700 mt-2"
+               th:text="${summary?.acknowledgedCount} ?: '0'">0</p>
         </div>
 
+        <!-- Monthly Total -->
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <p class="text-gray-500 text-sm">Pending / Ack</p>
-            <p class="text-3xl font-bold text-yellow-600 mt-2"
-               th:text="${summary?.pendingOrAckCount} ?: '0'">0</p>
+            <p class="text-gray-500 text-sm">Monthly Total</p>
+            <p class="text-3xl font-bold text-green-700 mt-2"
+               th:text="${summary?.monthlyTotal != null} ? '$' + ${#numbers.formatDecimal(summary.monthlyTotal, 0, 2, 'COMMA')} : '$0.00'">$0.00</p>
         </div>
+
     </div>
 
     <!-- Tabs -->
