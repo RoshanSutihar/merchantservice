@@ -126,9 +126,28 @@ public class MerchantUiPortalController {
 
             log.info("Automatically fetching today's transactions for merchantId: {}", merchantId);
             TransactionResponse todayTransactions = apiService.getTodayTransactions(merchantId);
-            log.info("Today's transactions fetched - {} items",
-                    todayTransactions != null && todayTransactions.getTransactions() != null
-                            ? todayTransactions.getTransactions().size() : 0);
+
+            // ─────────────────────────────────────────────────────────────
+            // TEMPORARY LOGGING - REMOVE LATER WHEN YOU'VE SEEN THE STRUCTURE
+            if (todayTransactions != null && todayTransactions.getTransactions() != null) {
+                int count = todayTransactions.getTransactions().size();
+                log.info("Today's transactions fetched - {} items", count);
+
+                if (count > 0) {
+                    log.info("===== TRANSACTION STRUCTURE (first one) =====");
+                    log.info("Transaction 1: {}", todayTransactions.getTransactions().get(0));
+                    log.info("===== END OF TRANSACTION STRUCTURE =====");
+                }
+
+                if (count >= 2) {
+                    log.info("===== TRANSACTION STRUCTURE (second one) =====");
+                    log.info("Transaction 2: {}", todayTransactions.getTransactions().get(1));
+                    log.info("===== END OF TRANSACTION STRUCTURE =====");
+                }
+            } else {
+                log.info("No transactions returned today (or null response)");
+            }
+            // ─────────────────────────────────────────────────────────────
 
             model.addAttribute("transactions", todayTransactions);
 
