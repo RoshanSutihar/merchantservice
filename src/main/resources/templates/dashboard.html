@@ -230,13 +230,11 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span th:switch="${tx.status}"
-                                      class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                      th:classappend="${tx.status == 'COMPLETED'} ? 'bg-green-100 text-green-800' :
-                                                       ${tx.status == 'PENDING'}  ? 'bg-yellow-100 text-yellow-800' :
-                                                       ${tx.status == 'FAILED'}   ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'">
-                                    <span th:case="*">
-                                        <span th:text="${tx.status} ?: 'Unknown'">COMPLETED</span>
-                                    </span>
+                                      class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                    <span th:case="'COMPLETED'" class="bg-green-100 text-green-800">COMPLETED</span>
+                                    <span th:case="'PENDING'" class="bg-yellow-100 text-yellow-800">PENDING</span>
+                                    <span th:case="'FAILED'" class="bg-red-100 text-red-800">FAILED</span>
+                                    <span th:case="*" class="bg-gray-100 text-gray-800">UNKNOWN</span>
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
