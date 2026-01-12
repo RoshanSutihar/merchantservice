@@ -26,7 +26,6 @@ import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
-
 @Controller
 public class MerchantUiPortalController {
 
@@ -48,10 +47,9 @@ public class MerchantUiPortalController {
         this.keycloakAdminService = keycloakAdminService;
     }
 
-
     @GetMapping("/")
     public String home() {
-        return "home"; // Public page for everyone
+        return "home";
     }
 
     @GetMapping("/post-login")
@@ -60,7 +58,6 @@ public class MerchantUiPortalController {
             return "redirect:/";
         }
 
-        // Check for admin role
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(granted -> {
                     String authority = granted.getAuthority();
@@ -74,7 +71,6 @@ public class MerchantUiPortalController {
             return "redirect:/register-merchant";
         }
 
-        // For non-admin users, redirect to dashboard
         return "redirect:/dashboard";
     }
 
@@ -84,7 +80,6 @@ public class MerchantUiPortalController {
             return "redirect:/";
         }
 
-        // Check if user is admin
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(granted -> {
                     String authority = granted.getAuthority();
@@ -92,7 +87,6 @@ public class MerchantUiPortalController {
                             authority.toUpperCase().contains("ADMIN");
                 });
 
-        // If admin, redirect to register-merchant (admins shouldn't see merchant dashboard)
         if (isAdmin) {
             System.out.println("Admin user trying to access dashboard, redirecting to /register-merchant");
             return "redirect:/register-merchant";
@@ -113,7 +107,6 @@ public class MerchantUiPortalController {
             model.addAttribute("merchant", merchant);
             model.addAttribute("selectedMerchant", merchantId);
 
-            // Load today's transactions by default
             TransactionResponse todayTransactions = apiService.getTodayTransactions(merchantId);
             model.addAttribute("transactions", todayTransactions);
 
@@ -132,7 +125,6 @@ public class MerchantUiPortalController {
 
     @GetMapping("/register-merchant")
     public String showRegisterMerchantForm(Model model, Authentication authentication) {
-        // Optional: Add check to ensure only admins can access this
         if (authentication != null && authentication.isAuthenticated()) {
             boolean isAdmin = authentication.getAuthorities().stream()
                     .anyMatch(granted -> {
@@ -166,7 +158,6 @@ public class MerchantUiPortalController {
             @RequestParam String bankRoutingNumber,
             Model model) {
 
-        // === Input validation (unchanged) ===
         if (storeName == null || storeName.trim().isEmpty()) {
             model.addAttribute("error", "Store name is required");
             return "register-merchant";
@@ -244,7 +235,6 @@ public class MerchantUiPortalController {
             }
         }
 
-        // === Register with external API ===
         try {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("storeName", storeName.trim());
@@ -258,16 +248,13 @@ public class MerchantUiPortalController {
 
             MerchantResponse response = apiService.registerMerchant(requestBody);
 
-            // === Generate unique 5-digit siteId ===
             String siteId = siteIdGeneratorService.generateUniqueSiteId();
 
-            // Mask the secret key: show only the last 8 characters
             String fullSecretKey = response.getSecretKey();
             String maskedSecretKey = fullSecretKey != null && fullSecretKey.length() > 8
                     ? "••••••••" + fullSecretKey.substring(fullSecretKey.length() - 8)
                     : "••••••••";
 
-            // === Save to local database (only masked version) ===
             Merchant merchant = new Merchant();
             merchant.setMerchantId(response.getMerchantId());
             merchant.setSiteId(siteId);
@@ -279,24 +266,24 @@ public class MerchantUiPortalController {
             merchant.setMaxCommission(maxCommissionBd);
             merchant.setBankAccountNumber(cleanedAccountNumber);
             merchant.setBankRoutingNumber(cleanedRoutingNumber);
-            merchant.setSecretKey(maskedSecretKey);  // Store only masked version
+            merchant.setSecretKey(maskedSecretKey);
 
             merchantRepository.save(merchant);
 
-            // === Generate temporary password ===
             String tempPassword = "admin123";
 
-            // === Create user in Keycloak (username = siteId) ===
-            keycloakAdminService.createMerchantUser(siteId, tempPassword);
+            // Create Keycloak user with storeName in lastName field
+            keycloakAdminService.createMerchantUser(
+                    siteId,           // username
+                    tempPassword,
+                    "Merchant",       // firstName
+                    storeName.trim()  // lastName = store name
+            );
 
-            // === Pass full secret key to view (one-time display only) ===
             model.addAttribute("fullSecretKey", fullSecretKey);
-
-            // === Success message with credentials ===
             model.addAttribute("merchantResponse", response);
             model.addAttribute("siteId", siteId);
             model.addAttribute("tempPassword", tempPassword);
-            model.addAttribute("fullSecretKey", fullSecretKey);
             model.addAttribute("success", "Merchant registered successfully!<br><br>" +
                     "<strong>Login Username (Site ID):</strong> " + siteId + "<br>" +
                     "<strong>Temporary Password:</strong> " + tempPassword + "<br><br>" +
@@ -313,8 +300,6 @@ public class MerchantUiPortalController {
 
     @PostMapping("/transactions/today")
     public String getTodayTransactions(@RequestParam String merchantId, Model model, Authentication authentication) {
-        // Security: only allow if logged-in user owns this merchantId
-        // We'll add proper check later; for now assume admin or correct user
         try {
             TransactionResponse response = apiService.getTodayTransactions(merchantId);
             model.addAttribute("transactions", response);

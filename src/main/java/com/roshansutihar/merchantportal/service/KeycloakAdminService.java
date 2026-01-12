@@ -12,7 +12,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.util.*;
-
 @Service
 public class KeycloakAdminService {
 
@@ -33,7 +32,7 @@ public class KeycloakAdminService {
     private final RestTemplate restTemplate;
 
     private String adminToken;
-    private Instant tokenExpiry = Instant.now(); // Simple token caching
+    private Instant tokenExpiry = Instant.now();
 
     public KeycloakAdminService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -42,7 +41,7 @@ public class KeycloakAdminService {
     private synchronized void ensureValidToken() {
         if (adminToken == null || Instant.now().isAfter(tokenExpiry.minusSeconds(30))) {
             adminToken = fetchAdminAccessToken();
-            tokenExpiry = Instant.now().plusSeconds(300); // Assume 5-minute validity
+            tokenExpiry = Instant.now().plusSeconds(300);
             log.debug("Fetched new Keycloak admin token");
         }
     }
@@ -73,21 +72,22 @@ public class KeycloakAdminService {
         throw new RuntimeException("Invalid response from Keycloak token endpoint");
     }
 
-    public void createMerchantUser(String siteId, String tempPassword) {
+    public void createMerchantUser(String username, String password, String firstName, String lastName) {
         ensureValidToken();
 
         String url = keycloakUrl + "/admin/realms/" + realm + "/users";
 
         Map<String, Object> userRepresentation = new HashMap<>();
-        userRepresentation.put("username", siteId);
+        userRepresentation.put("username", username);
         userRepresentation.put("enabled", true);
+        userRepresentation.put("firstName", firstName);
+        userRepresentation.put("lastName", lastName);
 
-        // Temporary password
         List<Map<String, Object>> credentials = new ArrayList<>();
         Map<String, Object> cred = new HashMap<>();
         cred.put("type", "password");
-        cred.put("value", tempPassword);
-        cred.put("temporary", true); // Force change on first login
+        cred.put("value", password);
+        cred.put("temporary", true);
         credentials.add(cred);
         userRepresentation.put("credentials", credentials);
 
@@ -103,19 +103,17 @@ public class KeycloakAdminService {
             throw new RuntimeException("Failed to create merchant user in Keycloak: " + response.getStatusCode());
         }
 
-        // Extract user ID from Location header and assign "merchant" role
         String location = Objects.requireNonNull(response.getHeaders().getLocation()).toString();
         String userId = location.substring(location.lastIndexOf("/") + 1);
 
         assignRoleToUser(userId, "merchant");
-        log.info("Created Keycloak user with username {} and assigned 'merchant' role", siteId);
+        log.info("Created Keycloak user: username={}, firstName={}, lastName={}, role=merchant",
+                username, firstName, lastName);
     }
-
 
     private void assignRoleToUser(String userId, String roleName) {
         ensureValidToken();
 
-        // First: Get role representation
         String roleUrl = keycloakUrl + "/admin/realms/" + realm + "/roles/" + roleName;
 
         HttpHeaders headers = new HttpHeaders();
@@ -129,7 +127,6 @@ public class KeycloakAdminService {
             throw new RuntimeException("Role not found in Keycloak: " + roleName);
         }
 
-        // Second: Assign role to user
         String assignUrl = keycloakUrl + "/admin/realms/" + realm + "/users/" + userId + "/role-mappings/realm";
 
         List<Map<String, Object>> roles = List.of(roleRepresentation);
@@ -141,6 +138,4 @@ public class KeycloakAdminService {
             throw new RuntimeException("Failed to assign role '" + roleName + "' to user");
         }
     }
-
-
 }
