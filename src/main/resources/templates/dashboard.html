@@ -218,7 +218,7 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                         <!-- Fixed: Iterate over transactions.transactions -->
                         <tr th:each="tx : ${transactions.transactions}">
-                            <td class="px-4 py-3 text-sm text-gray-800" th:text="${tx?.dateTime} ?: 'N/A'">2024-01-01 10:30</td>
+                            <td class="px-4 py-3 text-sm text-gray-800" th:text="${tx?.createdAt} ?: 'N/A'">2024-01-01 10:30</td>
                             <td class="px-4 py-3 text-sm font-medium text-gray-900" th:text="${tx?.transactionId} ?: 'N/A'">TXN-12345</td>
                             <td class="px-4 py-3 text-sm text-gray-800" th:text="${tx?.amount != null} ? '$' + ${tx.amount} : 'N/A'">$100.00</td>
                             <td class="px-4 py-3">
