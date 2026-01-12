@@ -27,6 +27,8 @@ import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
+
+
 @Controller
 public class MerchantUiPortalController {
 
@@ -117,43 +119,71 @@ public class MerchantUiPortalController {
 
             Merchant merchant = merchantOpt.get();
             String merchantId = merchant.getMerchantId();
-            log.info("Merchant loaded successfully - ID: {}, Store: {}", merchantId, merchant.getStoreName());
+            log.info("Merchant loaded successfully - Merchant ID: {}, Store: {}", merchantId, merchant.getStoreName());
 
             model.addAttribute("merchant", merchant);
             model.addAttribute("selectedMerchant", merchantId);
 
-            // Today's transactions list (for the table)
+            // 1. Today's transactions list (for the table)
+            log.info("Fetching today's transactions for merchantId: {}", merchantId);
             TransactionResponse todayTransactions = apiService.getTodayTransactions(merchantId);
+
+            if (todayTransactions != null && todayTransactions.getTransactions() != null) {
+                log.info("Today's transactions loaded - count: {}", todayTransactions.getTransactions().size());
+            } else {
+                log.warn("Today's transactions response is null or empty");
+            }
             model.addAttribute("transactions", todayTransactions);
 
-            // Summary data
+            // 2. Summary statistics
             LocalDate today = LocalDate.now();
             LocalDate monthStart = today.withDayOfMonth(1);
 
-            // Today's summary
+            log.info("Fetching summary for today: {} → {}", today, today);
             SummaryResponse todaySummary = apiService.getSummary(merchantId, today, today);
 
-            // This month's summary
+            log.info("Fetching summary for current month: {} → {}", monthStart, today);
             SummaryResponse monthSummary = apiService.getSummary(merchantId, monthStart, today);
 
-            // Build dashboard summary
+            // Detailed logging of summary responses
+            if (todaySummary != null) {
+                log.info("TODAY SUMMARY → totalTransactions: {}, totalAmount: {}, totalCommission: {}, totalNet: {}",
+                        todaySummary.getTotalTransactions(),
+                        todaySummary.getTotalAmount(),
+                        todaySummary.getTotalCommission(),
+                        todaySummary.getTotalNetAmount());
+            } else {
+                log.warn("todaySummary is NULL");
+            }
+
+            if (monthSummary != null) {
+                log.info("MONTH SUMMARY → totalTransactions: {}, totalAmount: {}, totalCommission: {}, totalNet: {}",
+                        monthSummary.getTotalTransactions(),
+                        monthSummary.getTotalAmount(),
+                        monthSummary.getTotalCommission(),
+                        monthSummary.getTotalNetAmount());
+            } else {
+                log.warn("monthSummary is NULL");
+            }
+
+            // 3. Build dashboard summary
             DashboardSummary summary = new DashboardSummary();
 
             // Today's Transactions Count
-            summary.setTodaysTransactionCount(
-                    todaySummary.getTotalTransactions() != null
-                            ? todaySummary.getTotalTransactions()
-                            : 0L
-            );
+            long todayCount = todaySummary != null && todaySummary.getTotalTransactions() != null
+                    ? todaySummary.getTotalTransactions()
+                    : 0L;
+            summary.setTodaysTransactionCount(todayCount);
+            log.info("Set todaysTransactionCount = {}", todayCount);
 
-            // Today's Sales (gross amount)
-            summary.setTodaysSales(
-                    todaySummary.getTotalAmount() != null
-                            ? BigDecimal.valueOf(todaySummary.getTotalAmount())
-                            : BigDecimal.ZERO
-            );
+            // Today's Sales
+            BigDecimal todaySales = todaySummary != null && todaySummary.getTotalAmount() != null
+                    ? BigDecimal.valueOf(todaySummary.getTotalAmount())
+                    : BigDecimal.ZERO;
+            summary.setTodaysSales(todaySales);
+            log.info("Set todaysSales = {}", todaySales);
 
-            // Acknowledged count → fallback to counting from today's transactions list
+            // Acknowledged count (from transaction list)
             long acknowledgedCount = 0L;
             if (todayTransactions != null && todayTransactions.getTransactions() != null) {
                 acknowledgedCount = todayTransactions.getTransactions().stream()
@@ -161,13 +191,14 @@ public class MerchantUiPortalController {
                         .count();
             }
             summary.setAcknowledgedCount(acknowledgedCount);
+            log.info("Calculated acknowledgedCount = {}", acknowledgedCount);
 
-            // Monthly Total (gross amount this month)
-            summary.setMonthlyTotal(
-                    monthSummary.getTotalAmount() != null
-                            ? BigDecimal.valueOf(monthSummary.getTotalAmount())
-                            : BigDecimal.ZERO
-            );
+            // Monthly Total
+            BigDecimal monthlyTotal = monthSummary != null && monthSummary.getTotalAmount() != null
+                    ? BigDecimal.valueOf(monthSummary.getTotalAmount())
+                    : BigDecimal.ZERO;
+            summary.setMonthlyTotal(monthlyTotal);
+            log.info("Set monthlyTotal = {}", monthlyTotal);
 
             model.addAttribute("summary", summary);
 
