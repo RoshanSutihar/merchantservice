@@ -12,19 +12,11 @@
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <!-- Custom purple theme -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'purple-primary': '#764ba2',
-                        'purple-secondary': '#667eea'
-                    }
-                }
-            }
-        }
-    </script>
+    <style>
+        .purple-primary { color: #764ba2; }
+        .purple-secondary { color: #667eea; }
+        .bg-purple-gradient { background: linear-gradient(to right, #764ba2, #667eea); }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
@@ -32,12 +24,12 @@
 <header class="sticky top-0 z-50 bg-white shadow-md">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
         <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 bg-gradient-to-r from-purple-primary to-purple-secondary rounded-lg"></div>
+            <div class="w-8 h-8 bg-purple-gradient rounded-lg"></div>
             <h1 class="text-xl font-bold text-gray-800">QRPay USA</h1>
         </div>
         <div class="flex items-center space-x-4">
             <span class="text-gray-600 hidden md:inline">
-                Welcome, <span sec:authentication="name" class="font-semibold text-purple-primary"></span>
+                Welcome, <span sec:authentication="name" class="font-semibold purple-primary"></span>
             </span>
             <form th:action="@{/logout}" method="post" sec:authorize="isAuthenticated()">
                 <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
@@ -59,15 +51,25 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
                 <p class="text-gray-500 text-sm">Store Name</p>
-                <p class="text-lg font-semibold" th:text="${merchant?.storeName} ?: 'Not set'">Store Name</p>
+                <p class="text-lg font-semibold">
+                    <span th:if="${merchant != null and merchant.storeName != null}" th:text="${merchant.storeName}">Store Name</span>
+                    <span th:unless="${merchant != null and merchant.storeName != null}">Not set</span>
+                </p>
             </div>
             <div>
                 <p class="text-gray-500 text-sm">Merchant ID / Site ID</p>
-                <p class="text-lg font-semibold text-purple-primary" th:text="${selectedMerchant} ?: 'Unknown'">MCH-123456</p>
+                <p class="text-lg font-semibold purple-primary">
+                    <span th:if="${selectedMerchant != null}" th:text="${selectedMerchant}">MCH-123456</span>
+                    <span th:unless="${selectedMerchant != null}">Unknown</span>
+                </p>
             </div>
             <div>
                 <p class="text-gray-500 text-sm">Commission Rate</p>
-                <p class="text-lg font-semibold" th:text="${merchant?.commissionType != null ? merchant.commissionType + ' - ' + merchant.commissionValue : 'Not set'}">Fixed - 2.5%</p>
+                <p class="text-lg font-semibold">
+                    <span th:if="${merchant != null and merchant.commissionType != null}"
+                          th:text="${merchant.commissionType} + ' - ' + ${merchant.commissionValue}">Fixed - 2.5%</span>
+                    <span th:unless="${merchant != null and merchant.commissionType != null}">Not set</span>
+                </p>
             </div>
         </div>
     </div>
@@ -76,52 +78,60 @@
     <div class="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
         <!-- Today's Transactions -->
-        <div class="bg-gradient-to-r from-purple-primary to-purple-secondary text-white rounded-xl shadow-lg p-6">
+        <div class="bg-purple-gradient text-white rounded-xl shadow-lg p-6">
             <p class="text-sm opacity-90">Today's Transactions</p>
-            <p class="text-3xl font-bold mt-2"
-               th:text="${summary?.todaysTransactionCount} ?: '0'">0</p>
+            <p class="text-3xl font-bold mt-2">
+                <span th:if="${summary != null and summary.todaysTransactionCount != null}"
+                      th:text="${summary.todaysTransactionCount}">0</span>
+                <span th:unless="${summary != null and summary.todaysTransactionCount != null}">0</span>
+            </p>
         </div>
 
         <!-- Today's Sales -->
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <p class="text-gray-500 text-sm">Today's Sales</p>
-            <p class="text-3xl font-bold text-gray-800 mt-2"
-               th:text="${summary?.todaysSales != null ? '$' + #numbers.formatDecimal(summary.todaysSales, 0, 2, 'COMMA') : '$0.00'}">$0.00</p>
+            <p class="text-3xl font-bold text-gray-800 mt-2">
+                <span th:if="${summary != null and summary.todaysSales != null}">
+                    $<span th:text="${#numbers.formatDecimal(summary.todaysSales, 0, 2, 'COMMA')}">0.00</span>
+                </span>
+                <span th:unless="${summary != null and summary.todaysSales != null}">$0.00</span>
+            </p>
         </div>
 
         <!-- Acknowledged -->
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <p class="text-gray-500 text-sm">Acknowledged</p>
-            <p class="text-3xl font-bold text-blue-700 mt-2"
-               th:text="${summary?.acknowledgedCount} ?: '0'">0</p>
+            <p class="text-3xl font-bold text-blue-700 mt-2">
+                <span th:if="${summary != null and summary.acknowledgedCount != null}"
+                      th:text="${summary.acknowledgedCount}">0</span>
+                <span th:unless="${summary != null and summary.acknowledgedCount != null}">0</span>
+            </p>
         </div>
 
         <!-- Monthly Total -->
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <p class="text-gray-500 text-sm">Monthly Total</p>
-            <p class="text-3xl font-bold text-green-700 mt-2"
-               th:text="${summary?.monthlyTotal != null ? '$' + #numbers.formatDecimal(summary.monthlyTotal, 0, 2, 'COMMA') : '$0.00'}">$0.00</p>
+            <p class="text-3xl font-bold text-green-700 mt-2">
+                <span th:if="${summary != null and summary.monthlyTotal != null}">
+                    $<span th:text="${#numbers.formatDecimal(summary.monthlyTotal, 0, 2, 'COMMA')}">0.00</span>
+                </span>
+                <span th:unless="${summary != null and summary.monthlyTotal != null}">$0.00</span>
+            </p>
         </div>
 
     </div>
 
     <!-- Tabs -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8" x-data="{ activeTab: 'today' }">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
         <div class="border-b border-gray-200">
             <nav class="flex flex-wrap">
-                <button @click="activeTab = 'today'"
-                        :class="activeTab === 'today' ? 'border-b-2 border-purple-primary text-purple-primary' : 'text-gray-500 hover:text-gray-700'"
-                        class="px-6 py-4 font-medium text-sm focus:outline-none transition duration-200">
+                <button id="todayTab" class="px-6 py-4 font-medium text-sm border-b-2 border-purple-primary text-purple-primary focus:outline-none">
                     Today's Transactions
                 </button>
-                <button @click="activeTab = 'range'"
-                        :class="activeTab === 'range' ? 'border-b-2 border-purple-primary text-purple-primary' : 'text-gray-500 hover:text-gray-700'"
-                        class="px-6 py-4 font-medium text-sm focus:outline-none transition duration-200">
+                <button id="rangeTab" class="px-6 py-4 font-medium text-sm text-gray-500 hover:text-gray-700 focus:outline-none">
                     Date Range
                 </button>
-                <button @click="activeTab = 'summary'"
-                        :class="activeTab === 'summary' ? 'border-b-2 border-purple-primary text-purple-primary' : 'text-gray-500 hover:text-gray-700'"
-                        class="px-6 py-4 font-medium text-sm focus:outline-none transition duration-200">
+                <button id="summaryTab" class="px-6 py-4 font-medium text-sm text-gray-500 hover:text-gray-700 focus:outline-none">
                     Summary
                 </button>
             </nav>
@@ -129,16 +139,15 @@
 
         <div class="p-6">
             <!-- TODAY'S TRANSACTIONS TAB -->
-            <div x-show="activeTab === 'today'" x-transition>
+            <div id="todayContent">
                 <form th:action="@{/transactions/today}" method="post" class="mb-6">
                     <input type="hidden" name="merchantId" th:value="${selectedMerchant}" />
-                    <button type="submit"
-                            class="bg-gradient-to-r from-purple-primary to-purple-secondary text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition duration-200">
+                    <button type="submit" class="bg-purple-gradient text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition duration-200">
                         Refresh Today's Transactions
                     </button>
                 </form>
 
-                <div th:if="${transactions != null and !#lists.isEmpty(transactions.transactions)}" class="overflow-x-auto">
+                <div th:if="${transactions != null and transactions.transactions != null and !transactions.transactions.empty}" class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                         <tr>
@@ -153,44 +162,67 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                         <tr th:each="tx : ${transactions.transactions}" class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <span th:text="${#temporals.format(tx.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-12 04:01</span>
+                                <span th:if="${tx.createdAt != null}" th:text="${#temporals.format(tx.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-12 04:01</span>
+                                <span th:unless="${tx.createdAt != null}">N/A</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <code class="bg-gray-100 px-2 py-1 rounded" th:text="${tx.transactionRef}">TXN_123456789</code>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                <span th:text="'$' + ${#numbers.formatDecimal(tx.amount, 0, 2, 'COMMA')}">$2.15</span>
+                                <span th:if="${tx.amount != null}">
+                                    $<span th:text="${#numbers.formatDecimal(tx.amount, 0, 2, 'COMMA')}">2.15</span>
+                                </span>
+                                <span th:unless="${tx.amount != null}">$0.00</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                <span th:text="'$' + ${#numbers.formatDecimal(tx.commissionAmount, 0, 2, 'COMMA')}">$0.65</span>
+                                <span th:if="${tx.commissionAmount != null}">
+                                    $<span th:text="${#numbers.formatDecimal(tx.commissionAmount, 0, 2, 'COMMA')}">0.65</span>
+                                </span>
+                                <span th:unless="${tx.commissionAmount != null}">$0.00</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-700">
-                                <span th:text="'$' + ${#numbers.formatDecimal(tx.netAmount, 0, 2, 'COMMA')}">$1.50</span>
+                                <span th:if="${tx.netAmount != null}">
+                                    $<span th:text="${#numbers.formatDecimal(tx.netAmount, 0, 2, 'COMMA')}">1.50</span>
+                                </span>
+                                <span th:unless="${tx.netAmount != null}">$0.00</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span th:switch="${tx.status}"
-                                      class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                    <span th:case="'ACKNOWLEDGED'" class="bg-blue-100 text-blue-800">ACKNOWLEDGED</span>
-                                    <span th:case="'SETTLED'" class="bg-green-100 text-green-800">SETTLED</span>
-                                    <span th:case="'PENDING'" class="bg-yellow-100 text-yellow-800">PENDING</span>
-                                    <span th:case="'FAILED'" class="bg-red-100 text-red-800">FAILED</span>
-                                    <span th:case="*">UNKNOWN</span>
+                                <span th:if="${tx.status != null}">
+                                    <span th:switch="${tx.status}"
+                                          class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                        <span th:case="'ACKNOWLEDGED'" class="bg-blue-100 text-blue-800">ACKNOWLEDGED</span>
+                                        <span th:case="'SETTLED'" class="bg-green-100 text-green-800">SETTLED</span>
+                                        <span th:case="'PENDING'" class="bg-yellow-100 text-yellow-800">PENDING</span>
+                                        <span th:case="'FAILED'" class="bg-red-100 text-red-800">FAILED</span>
+                                        <span th:case="*" class="bg-gray-100 text-gray-800">UNKNOWN</span>
+                                    </span>
+                                </span>
+                                <span th:unless="${tx.status != null}" class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    UNKNOWN
                                 </span>
                             </td>
                         </tr>
                         </tbody>
-                        <!-- Totals Row -->
                         <tfoot class="bg-gray-50 font-medium">
                         <tr>
                             <td colspan="2" class="px-6 py-4 text-right text-gray-700">Total:</td>
                             <td class="px-6 py-4 text-gray-900">
-                                <span th:text="'$' + ${#numbers.formatDecimal(transactions.totalAmount, 0, 2, 'COMMA')}">$0.00</span>
+                                <span th:if="${transactions.totalAmount != null}">
+                                    $<span th:text="${#numbers.formatDecimal(transactions.totalAmount, 0, 2, 'COMMA')}">0.00</span>
+                                </span>
+                                <span th:unless="${transactions.totalAmount != null}">$0.00</span>
                             </td>
                             <td class="px-6 py-4 text-gray-700">
-                                <span th:text="'$' + ${#numbers.formatDecimal(transactions.totalCommission, 0, 2, 'COMMA')}">$0.00</span>
+                                <span th:if="${transactions.totalCommission != null}">
+                                    $<span th:text="${#numbers.formatDecimal(transactions.totalCommission, 0, 2, 'COMMA')}">0.00</span>
+                                </span>
+                                <span th:unless="${transactions.totalCommission != null}">$0.00</span>
                             </td>
                             <td class="px-6 py-4 text-green-700 font-semibold">
-                                <span th:text="'$' + ${#numbers.formatDecimal(transactions.totalNet, 0, 2, 'COMMA')}">$0.00</span>
+                                <span th:if="${transactions.totalNet != null}">
+                                    $<span th:text="${#numbers.formatDecimal(transactions.totalNet, 0, 2, 'COMMA')}">0.00</span>
+                                </span>
+                                <span th:unless="${transactions.totalNet != null}">$0.00</span>
                             </td>
                             <td></td>
                         </tr>
@@ -198,22 +230,22 @@
                     </table>
                 </div>
 
-                <div th:unless="${transactions != null and !#lists.isEmpty(transactions.transactions)}"
+                <div th:unless="${transactions != null and transactions.transactions != null and !transactions.transactions.empty}"
                      class="text-center py-12 text-gray-500">
                     <p class="text-lg">No transactions found for today</p>
                     <p class="mt-2">Try again later or check other date ranges</p>
                 </div>
             </div>
 
-            <!-- DATE RANGE & SUMMARY TABS (kept minimal - you can expand later) -->
-            <div x-show="activeTab === 'range'" x-transition>
+            <!-- DATE RANGE & SUMMARY TABS -->
+            <div id="rangeContent" style="display: none;">
                 <p class="text-gray-600 mb-4">Select date range to view detailed transactions</p>
-                <!-- Your existing date range form here -->
+                <!-- Date range form will go here -->
             </div>
 
-            <div x-show="activeTab === 'summary'" x-transition>
+            <div id="summaryContent" style="display: none;">
                 <p class="text-gray-600 mb-4">Generate summary report for selected period</p>
-                <!-- Your existing summary form here -->
+                <!-- Summary form will go here -->
             </div>
         </div>
     </div>
@@ -224,6 +256,68 @@
         © 2026 QRPay USA • Merchant Portal
     </div>
 </footer>
+
+<script>
+    // Simple tab switching without Alpine.js
+    document.addEventListener('DOMContentLoaded', function() {
+        const todayTab = document.getElementById('todayTab');
+        const rangeTab = document.getElementById('rangeTab');
+        const summaryTab = document.getElementById('summaryTab');
+
+        const todayContent = document.getElementById('todayContent');
+        const rangeContent = document.getElementById('rangeContent');
+        const summaryContent = document.getElementById('summaryContent');
+
+        function showToday() {
+            todayContent.style.display = 'block';
+            rangeContent.style.display = 'none';
+            summaryContent.style.display = 'none';
+
+            todayTab.classList.add('border-b-2', 'border-purple-primary', 'text-purple-primary');
+            todayTab.classList.remove('text-gray-500');
+
+            rangeTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
+            rangeTab.classList.add('text-gray-500');
+
+            summaryTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
+            summaryTab.classList.add('text-gray-500');
+        }
+
+        function showRange() {
+            todayContent.style.display = 'none';
+            rangeContent.style.display = 'block';
+            summaryContent.style.display = 'none';
+
+            rangeTab.classList.add('border-b-2', 'border-purple-primary', 'text-purple-primary');
+            rangeTab.classList.remove('text-gray-500');
+
+            todayTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
+            todayTab.classList.add('text-gray-500');
+
+            summaryTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
+            summaryTab.classList.add('text-gray-500');
+        }
+
+        function showSummary() {
+            todayContent.style.display = 'none';
+            rangeContent.style.display = 'none';
+            summaryContent.style.display = 'block';
+
+            summaryTab.classList.add('border-b-2', 'border-purple-primary', 'text-purple-primary');
+            summaryTab.classList.remove('text-gray-500');
+
+            todayTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
+            todayTab.classList.add('text-gray-500');
+
+            rangeTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
+            rangeTab.classList.add('text-gray-500');
+        }
+
+        todayTab.addEventListener('click', showToday);
+        rangeTab.addEventListener('click', showRange);
+        summaryTab.addEventListener('click', showSummary);
+    });
+</script>
 
 </body>
 </html>
