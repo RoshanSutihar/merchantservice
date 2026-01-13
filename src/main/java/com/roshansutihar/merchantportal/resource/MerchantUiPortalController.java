@@ -2,6 +2,7 @@ package com.roshansutihar.merchantportal.resource;
 
 
 import com.roshansutihar.merchantportal.dto.DashboardSummary;
+import com.roshansutihar.merchantportal.dto.TransactionDTO;
 import com.roshansutihar.merchantportal.entity.Merchant;
 import com.roshansutihar.merchantportal.repository.MerchantRepository;
 import com.roshansutihar.merchantportal.response.MerchantResponse;
@@ -130,8 +131,27 @@ public class MerchantUiPortalController {
 
             if (todayTransactions != null && todayTransactions.getTransactions() != null) {
                 log.info("Today's transactions loaded - count: {}", todayTransactions.getTransactions().size());
+
+                // Calculate totals for the table
+                double totalAmount = 0.0;
+                double totalCommission = 0.0;
+                double totalNet = 0.0;
+
+                for (TransactionDTO tx : todayTransactions.getTransactions()) {
+                    totalAmount += tx.getAmount() != null ? tx.getAmount() : 0.0;
+                    totalCommission += tx.getCommissionAmount() != null ? tx.getCommissionAmount() : 0.0;
+                    totalNet += tx.getNetAmount() != null ? tx.getNetAmount() : 0.0;
+                }
+
+                model.addAttribute("totalAmount", totalAmount);
+                model.addAttribute("totalCommission", totalCommission);
+                model.addAttribute("totalNet", totalNet);
+
             } else {
                 log.warn("Today's transactions response is null or empty");
+                model.addAttribute("totalAmount", 0.0);
+                model.addAttribute("totalCommission", 0.0);
+                model.addAttribute("totalNet", 0.0);
             }
             model.addAttribute("transactions", todayTransactions);
 
@@ -144,27 +164,6 @@ public class MerchantUiPortalController {
 
             log.info("Fetching summary for current month: {} → {}", monthStart, today);
             SummaryResponse monthSummary = apiService.getSummary(merchantId, monthStart, today);
-
-            // Detailed logging of summary responses
-            if (todaySummary != null) {
-                log.info("TODAY SUMMARY → totalTransactions: {}, totalAmount: {}, totalCommission: {}, totalNet: {}",
-                        todaySummary.getTotalTransactions(),
-                        todaySummary.getTotalAmount(),
-                        todaySummary.getTotalCommission(),
-                        todaySummary.getTotalNetAmount());
-            } else {
-                log.warn("todaySummary is NULL");
-            }
-
-            if (monthSummary != null) {
-                log.info("MONTH SUMMARY → totalTransactions: {}, totalAmount: {}, totalCommission: {}, totalNet: {}",
-                        monthSummary.getTotalTransactions(),
-                        monthSummary.getTotalAmount(),
-                        monthSummary.getTotalCommission(),
-                        monthSummary.getTotalNetAmount());
-            } else {
-                log.warn("monthSummary is NULL");
-            }
 
             // 3. Build dashboard summary
             DashboardSummary summary = new DashboardSummary();
@@ -212,6 +211,9 @@ public class MerchantUiPortalController {
         } catch (Exception e) {
             log.error("Critical error loading dashboard for siteId {}: {}", siteId, e.getMessage(), e);
             model.addAttribute("error", "Unable to load dashboard: " + e.getMessage());
+            model.addAttribute("totalAmount", 0.0);
+            model.addAttribute("totalCommission", 0.0);
+            model.addAttribute("totalNet", 0.0);
         }
 
         return "dashboard";
