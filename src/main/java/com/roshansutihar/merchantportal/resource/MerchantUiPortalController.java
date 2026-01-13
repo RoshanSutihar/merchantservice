@@ -441,16 +441,81 @@ public class MerchantUiPortalController {
         try {
             LocalDate today = LocalDate.now(CHICAGO_ZONE);
             log.debug("Calling ApiService.getTransactionsByDateRange for today: {}", today);
+
+            // 1. Get today's transactions
             TransactionResponse response = apiService.getTransactionsByDateRange(merchantId, today, today, null);
             log.info("Today's transactions loaded - {} items",
                     response != null && response.getTransactions() != null ? response.getTransactions().size() : 0);
 
+            // 2. ALSO get summary data
+            SummaryResponse todaySummary = apiService.getSummary(merchantId, today, today);
+            LocalDate monthStart = today.withDayOfMonth(1);
+            SummaryResponse monthSummary = apiService.getSummary(merchantId, monthStart, today);
+
+            // 3. Calculate totals for the table
+            double totalAmount = 0.0;
+            double totalCommission = 0.0;
+            double totalNet = 0.0;
+
+            if (response != null && response.getTransactions() != null) {
+                for (Transaction tx : response.getTransactions()) {
+                    totalAmount += tx.getAmount() != null ? tx.getAmount() : 0.0;
+                    totalCommission += tx.getCommissionAmount() != null ? tx.getCommissionAmount() : 0.0;
+                    totalNet += tx.getNetAmount() != null ? tx.getNetAmount() : 0.0;
+                }
+            }
+
+            // 4. Build dashboard summary
+            DashboardSummary summary = new DashboardSummary();
+
+            // Today's Transactions Count
+            long todayCount = todaySummary != null && todaySummary.getTotalTransactions() != null
+                    ? todaySummary.getTotalTransactions()
+                    : 0L;
+            summary.setTodaysTransactionCount(todayCount);
+
+            // Today's Sales
+            BigDecimal todaySales = todaySummary != null && todaySummary.getTotalAmount() != null
+                    ? BigDecimal.valueOf(todaySummary.getTotalAmount())
+                    : BigDecimal.ZERO;
+            summary.setTodaysSales(todaySales);
+
+            // Acknowledged count
+            long acknowledgedCount = 0L;
+            if (response != null && response.getTransactions() != null) {
+                acknowledgedCount = response.getTransactions().stream()
+                        .filter(tx -> tx.getStatus() != null &&
+                                tx.getStatus().equalsIgnoreCase("ACKNOWLEDGED"))
+                        .count();
+            }
+            summary.setAcknowledgedCount(acknowledgedCount);
+
+            // Monthly Total
+            BigDecimal monthlyTotal = monthSummary != null && monthSummary.getTotalAmount() != null
+                    ? BigDecimal.valueOf(monthSummary.getTotalAmount())
+                    : BigDecimal.ZERO;
+            summary.setMonthlyTotal(monthlyTotal);
+
+            // 5. Get merchant info (since we need it for the template)
+            String siteId = authentication.getName();
+            Optional<Merchant> merchantOpt = merchantRepository.findBySiteId(siteId);
+            if (merchantOpt.isPresent()) {
+                Merchant merchant = merchantOpt.get();
+                model.addAttribute("merchant", merchant);
+            }
+
+            // 6. Add all attributes to model
             model.addAttribute("transactions", response);
             model.addAttribute("selectedMerchant", merchantId);
+            model.addAttribute("summary", summary);
+            model.addAttribute("totalAmount", totalAmount);
+            model.addAttribute("totalCommission", totalCommission);
+            model.addAttribute("totalNet", totalNet);
             model.addAttribute("view", "today");
             model.addAttribute("fromDate", today);
             model.addAttribute("toDate", today);
             model.addAttribute("selectedStatus", "");
+
         } catch (Exception e) {
             log.error("Failed to fetch today's transactions for merchantId {}: {}", merchantId, e.getMessage(), e);
             model.addAttribute("error", "Error fetching today's transactions: " + e.getMessage());

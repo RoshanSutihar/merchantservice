@@ -119,6 +119,7 @@
             <div id="todayContent">
                 <form th:action="@{/transactions/today}" method="post" class="mb-6">
                     <input type="hidden" name="merchantId" th:value="${selectedMerchant}" />
+                    <input type="hidden" name="refresh" value="true" />
                     <button type="submit" class="bg-purple-gradient text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition duration-200">
                         Refresh Today's Transactions
                     </button>

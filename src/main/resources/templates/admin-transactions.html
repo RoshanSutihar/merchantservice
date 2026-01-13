@@ -124,20 +124,29 @@
     </div>
 
     <!-- Transactions Table -->
+    <!-- Transactions Table -->
     <div th:if="${transactions != null}" class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h3 class="text-xl font-semibold text-gray-800">Transaction History</h3>
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+            <h3 class="text-xl font-semibold text-gray-800">Transaction History
+                <span class="text-gray-600 font-normal ml-2">
+                    (<span th:text="${transactionCount}">0</span> transactions found)
+                </span>
+            </h3>
+            <div class="text-sm text-gray-700">
+                <span class="font-medium">Total:</span>
+                $<span th:text="${#numbers.formatDecimal(totalAmount, 0, 2, 'POINT')}">0.00</span>
+            </div>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-gray-100">
                 <tr>
                     <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Date & Time</th>
-                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Transaction ID</th>
+                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Transaction Ref</th>
                     <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Amount</th>
+                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Commission</th>
+                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Net Amount</th>
                     <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Customer</th>
-                    <th class="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Description</th>
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -154,24 +163,39 @@
                         <code class="text-sm bg-gray-100 px-2 py-1 rounded font-mono" th:text="${tx.transactionRef}">TXN-12345</code>
                     </td>
 
-                    <td class="py-4 px-6 font-medium" th:text="'$' + ${tx.amount}">0.00</td>
-
-                    <!-- FIXED STATUS BADGE - using your real statuses: ACKNOWLEDGED and SETTLED -->
-                    <td class="py-4 px-6">
-                        <span th:classappend="
-                            ${#strings.equalsIgnoreCase(tx.status, 'ACKNOWLEDGED')} ? 'bg-blue-100 text-blue-800' :
-                            ${#strings.equalsIgnoreCase(tx.status, 'SETTLED')}     ? 'bg-green-100 text-green-800' :
-                                                                          'bg-gray-100 text-gray-800'"
-                              class="inline-block px-3 py-1 text-xs font-semibold rounded-full"
-                              th:text="${tx.status ?: 'UNKNOWN'}">
-                            UNKNOWN
-                        </span>
+                    <td class="py-4 px-6 font-medium">
+                        $<span th:text="${#numbers.formatDecimal(tx.amount, 0, 2, 'POINT')}">0.00</span>
                     </td>
 
-                    <td class="py-4 px-6 text-sm" th:text="${tx.customerName ?: '—'}">John Doe</td>
+                    <td class="py-4 px-6 text-gray-600">
+                        <span th:if="${tx.commissionAmount != null}">
+                            $<span th:text="${#numbers.formatDecimal(tx.commissionAmount, 0, 2, 'POINT')}">0.00</span>
+                        </span>
+                        <span th:if="${tx.commissionAmount == null}" class="text-gray-400">—</span>
+                    </td>
 
-                    <td class="py-4 px-6 text-sm text-gray-600 truncate max-w-xs" th:text="${tx.description ?: '—'}">
-                        Payment for order
+                    <td class="py-4 px-6 font-medium text-green-600">
+                        <span th:if="${tx.netAmount != null}">
+                            $<span th:text="${#numbers.formatDecimal(tx.netAmount, 0, 2, 'POINT')}">0.00</span>
+                        </span>
+                        <span th:if="${tx.netAmount == null}" class="text-gray-400">—</span>
+                    </td>
+
+                    <!-- Status Badge -->
+                    <td class="py-4 px-6">
+                        <span th:if="${tx.status != null}">
+                            <span th:switch="${tx.status}"
+                                  class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                <span th:case="'ACKNOWLEDGED'" class="bg-blue-100 text-blue-800">ACKNOWLEDGED</span>
+                                <span th:case="'SETTLED'" class="bg-green-100 text-green-800">SETTLED</span>
+                                <span th:case="'PENDING'" class="bg-yellow-100 text-yellow-800">PENDING</span>
+                                <span th:case="'FAILED'" class="bg-red-100 text-red-800">FAILED</span>
+                                <span th:case="*" class="bg-gray-100 text-gray-800">UNKNOWN</span>
+                            </span>
+                        </span>
+                        <span th:if="${tx.status == null}" class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                            UNKNOWN
+                        </span>
                     </td>
                 </tr>
 
@@ -184,6 +208,22 @@
                     </td>
                 </tr>
                 </tbody>
+                <!-- Totals Footer -->
+                <tfoot class="bg-gray-50 border-t border-gray-200">
+                <tr>
+                    <td colspan="2" class="py-4 px-6 text-right text-sm font-medium text-gray-700">Totals:</td>
+                    <td class="py-4 px-6 text-sm font-semibold text-gray-900">
+                        $<span th:text="${#numbers.formatDecimal(totalAmount, 0, 2, 'POINT')}">0.00</span>
+                    </td>
+                    <td class="py-4 px-6 text-sm text-gray-700">
+                        $<span th:text="${#numbers.formatDecimal(totalCommission, 0, 2, 'POINT')}">0.00</span>
+                    </td>
+                    <td class="py-4 px-6 text-sm font-semibold text-green-700">
+                        $<span th:text="${#numbers.formatDecimal(totalNet, 0, 2, 'POINT')}">0.00</span>
+                    </td>
+                    <td class="py-4 px-6"></td>
+                </tr>
+                </tfoot>
             </table>
         </div>
     </div>

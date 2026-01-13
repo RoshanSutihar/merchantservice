@@ -2,6 +2,7 @@ package com.roshansutihar.merchantportal.resource;
 
 import com.roshansutihar.merchantportal.entity.Merchant;
 import com.roshansutihar.merchantportal.repository.MerchantRepository;
+import com.roshansutihar.merchantportal.request.Transaction;
 import com.roshansutihar.merchantportal.response.TransactionResponse;
 import com.roshansutihar.merchantportal.service.ApiService;
 import org.slf4j.Logger;
@@ -14,9 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
-
 
 @Controller
 @RequestMapping("/admin")
@@ -26,6 +27,9 @@ public class AdminMerchantController {
     private final ApiService apiService;
 
     private static final Logger log = LoggerFactory.getLogger(AdminMerchantController.class);
+
+    // Add timezone constant
+    private static final ZoneId CHICAGO_ZONE = ZoneId.of("America/Chicago");
 
     public AdminMerchantController(MerchantRepository merchantRepository, ApiService apiService) {
         this.merchantRepository = merchantRepository;
@@ -90,7 +94,7 @@ public class AdminMerchantController {
         model.addAttribute("totalMerchants", merchants.size());
 
         // Default date range: last 30 days if none provided
-        LocalDate end = (toDate != null) ? toDate : LocalDate.now();
+        LocalDate end = (toDate != null) ? toDate : LocalDate.now(CHICAGO_ZONE);
         LocalDate start = (fromDate != null) ? fromDate : end.minusDays(30);
 
         model.addAttribute("fromDate", start);
@@ -105,12 +109,32 @@ public class AdminMerchantController {
             if (selectedMerchantOpt.isPresent()) {
                 Merchant selected = selectedMerchantOpt.get();
                 model.addAttribute("selectedMerchant", selected);
+                model.addAttribute("selectedMerchantId", merchantId);
 
                 try {
                     TransactionResponse transactions = apiService.getTransactionsByDateRange(
                             merchantId, start, end, status);
                     model.addAttribute("transactions", transactions);
-                    model.addAttribute("selectedMerchantId", merchantId);
+
+                    // Calculate totals for display
+                    double totalAmount = 0.0;
+                    double totalCommission = 0.0;
+                    double totalNet = 0.0;
+
+                    if (transactions != null && transactions.getTransactions() != null) {
+                        for (Transaction tx : transactions.getTransactions()) {
+                            totalAmount += tx.getAmount() != null ? tx.getAmount() : 0.0;
+                            totalCommission += tx.getCommissionAmount() != null ? tx.getCommissionAmount() : 0.0;
+                            totalNet += tx.getNetAmount() != null ? tx.getNetAmount() : 0.0;
+                        }
+                    }
+
+                    model.addAttribute("totalAmount", totalAmount);
+                    model.addAttribute("totalCommission", totalCommission);
+                    model.addAttribute("totalNet", totalNet);
+                    model.addAttribute("transactionCount",
+                            transactions != null && transactions.getTransactions() != null ?
+                                    transactions.getTransactions().size() : 0);
 
                 } catch (Exception e) {
                     log.error("Error fetching transactions for merchant {}", merchantId, e);
@@ -121,6 +145,10 @@ public class AdminMerchantController {
             }
         } else {
             model.addAttribute("transactions", null);
+            model.addAttribute("transactionCount", 0);
+            model.addAttribute("totalAmount", 0.0);
+            model.addAttribute("totalCommission", 0.0);
+            model.addAttribute("totalNet", 0.0);
         }
 
         return "admin-transactions";
