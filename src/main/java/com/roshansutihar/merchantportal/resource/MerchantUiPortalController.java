@@ -24,12 +24,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
-
 
 @Controller
 public class MerchantUiPortalController {
@@ -40,6 +40,9 @@ public class MerchantUiPortalController {
     private final KeycloakAdminService keycloakAdminService;
 
     private static final Logger log = LoggerFactory.getLogger(MerchantUiPortalController.class);
+
+    // Chicago timezone constant
+    private static final ZoneId CHICAGO_ZONE = ZoneId.of("America/Chicago");
 
     public MerchantUiPortalController(
             ApiService apiService,
@@ -138,7 +141,7 @@ public class MerchantUiPortalController {
                 double totalCommission = 0.0;
                 double totalNet = 0.0;
 
-                for (Transaction tx : todayTransactions.getTransactions()) { // Changed to Transaction
+                for (Transaction tx : todayTransactions.getTransactions()) {
                     totalAmount += tx.getAmount() != null ? tx.getAmount() : 0.0;
                     totalCommission += tx.getCommissionAmount() != null ? tx.getCommissionAmount() : 0.0;
                     totalNet += tx.getNetAmount() != null ? tx.getNetAmount() : 0.0;
@@ -156,14 +159,14 @@ public class MerchantUiPortalController {
             }
             model.addAttribute("transactions", todayTransactions);
 
-            // 2. Summary statistics
-            LocalDate today = LocalDate.now();
+            // 2. Summary statistics - USE CHICAGO TIMEZONE
+            LocalDate today = LocalDate.now(CHICAGO_ZONE); // Changed to Chicago timezone
             LocalDate monthStart = today.withDayOfMonth(1);
 
-            log.info("Fetching summary for today: {} → {}", today, today);
+            log.info("Fetching summary for today (Chicago time): {} → {}", today, today);
             SummaryResponse todaySummary = apiService.getSummary(merchantId, today, today);
 
-            log.info("Fetching summary for current month: {} → {}", monthStart, today);
+            log.info("Fetching summary for current month (Chicago time): {} → {}", monthStart, today);
             SummaryResponse monthSummary = apiService.getSummary(merchantId, monthStart, today);
 
             // 3. Build dashboard summary
@@ -202,7 +205,7 @@ public class MerchantUiPortalController {
 
             model.addAttribute("summary", summary);
 
-            // Form defaults
+            // Form defaults - USE CHICAGO TIME
             model.addAttribute("view", "today");
             model.addAttribute("fromDate", today);
             model.addAttribute("toDate", today);
@@ -436,8 +439,8 @@ public class MerchantUiPortalController {
             model.addAttribute("transactions", response);
             model.addAttribute("selectedMerchant", merchantId);
             model.addAttribute("view", "today");
-            model.addAttribute("fromDate", LocalDate.now());
-            model.addAttribute("toDate", LocalDate.now());
+            model.addAttribute("fromDate", LocalDate.now(CHICAGO_ZONE)); // Changed to Chicago time
+            model.addAttribute("toDate", LocalDate.now(CHICAGO_ZONE));   // Changed to Chicago time
             model.addAttribute("selectedStatus", "");
         } catch (Exception e) {
             log.error("Failed to fetch today's transactions for merchantId {}: {}", merchantId, e.getMessage(), e);
