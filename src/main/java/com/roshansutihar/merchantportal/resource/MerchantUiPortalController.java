@@ -30,7 +30,6 @@ import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
-
 @Controller
 public class MerchantUiPortalController {
 
@@ -129,9 +128,11 @@ public class MerchantUiPortalController {
             model.addAttribute("merchant", merchant);
             model.addAttribute("selectedMerchant", merchantId);
 
-            // 1. Today's transactions list (for the table)
-            log.info("Fetching today's transactions for merchantId: {}", merchantId);
-            TransactionResponse todayTransactions = apiService.getTodayTransactions(merchantId);
+            // 1. Get today's transactions using date range (NOT /today endpoint)
+            LocalDate today = LocalDate.now(CHICAGO_ZONE);
+            log.info("Fetching today's transactions for merchantId: {} (Chicago date: {})", merchantId, today);
+
+            TransactionResponse todayTransactions = apiService.getTransactionsByDateRange(merchantId, today, today, null);
 
             if (todayTransactions != null && todayTransactions.getTransactions() != null) {
                 log.info("Today's transactions loaded - count: {}", todayTransactions.getTransactions().size());
@@ -159,8 +160,7 @@ public class MerchantUiPortalController {
             }
             model.addAttribute("transactions", todayTransactions);
 
-            // 2. Summary statistics - USE CHICAGO TIMEZONE
-            LocalDate today = LocalDate.now(CHICAGO_ZONE); // Changed to Chicago timezone
+            // 2. Summary statistics
             LocalDate monthStart = today.withDayOfMonth(1);
 
             log.info("Fetching summary for today (Chicago time): {} → {}", today, today);
@@ -186,12 +186,20 @@ public class MerchantUiPortalController {
             summary.setTodaysSales(todaySales);
             log.info("Set todaysSales = {}", todaySales);
 
-            // Acknowledged count (from transaction list)
+            // Acknowledged count - FIXED: Check multiple status variations
             long acknowledgedCount = 0L;
             if (todayTransactions != null && todayTransactions.getTransactions() != null) {
                 acknowledgedCount = todayTransactions.getTransactions().stream()
-                        .filter(tx -> "ACKNOWLEDGED".equalsIgnoreCase(tx.getStatus()))
+                        .filter(tx -> tx.getStatus() != null &&
+                                (tx.getStatus().equalsIgnoreCase("ACKNOWLEDGED") ||
+                                        tx.getStatus().equalsIgnoreCase("SUCCESS") ||
+                                        tx.getStatus().equalsIgnoreCase("SETTLED") ||
+                                        tx.getStatus().contains("ACK")))
                         .count();
+
+                // Debug: Log statuses to see what we're getting
+                todayTransactions.getTransactions().forEach(tx ->
+                        log.debug("Transaction status: {}, ref: {}", tx.getStatus(), tx.getTransactionRef()));
             }
             summary.setAcknowledgedCount(acknowledgedCount);
             log.info("Calculated acknowledgedCount = {}", acknowledgedCount);
@@ -205,7 +213,7 @@ public class MerchantUiPortalController {
 
             model.addAttribute("summary", summary);
 
-            // Form defaults - USE CHICAGO TIME
+            // Form defaults
             model.addAttribute("view", "today");
             model.addAttribute("fromDate", today);
             model.addAttribute("toDate", today);
@@ -431,16 +439,17 @@ public class MerchantUiPortalController {
         log.info("Today's transactions requested for merchantId: {}", merchantId);
 
         try {
-            log.debug("Calling ApiService.getTodayTransactions for {}", merchantId);
-            TransactionResponse response = apiService.getTodayTransactions(merchantId);
+            LocalDate today = LocalDate.now(CHICAGO_ZONE);
+            log.debug("Calling ApiService.getTransactionsByDateRange for today: {}", today);
+            TransactionResponse response = apiService.getTransactionsByDateRange(merchantId, today, today, null);
             log.info("Today's transactions loaded - {} items",
                     response != null && response.getTransactions() != null ? response.getTransactions().size() : 0);
 
             model.addAttribute("transactions", response);
             model.addAttribute("selectedMerchant", merchantId);
             model.addAttribute("view", "today");
-            model.addAttribute("fromDate", LocalDate.now(CHICAGO_ZONE)); // Changed to Chicago time
-            model.addAttribute("toDate", LocalDate.now(CHICAGO_ZONE));   // Changed to Chicago time
+            model.addAttribute("fromDate", today);
+            model.addAttribute("toDate", today);
             model.addAttribute("selectedStatus", "");
         } catch (Exception e) {
             log.error("Failed to fetch today's transactions for merchantId {}: {}", merchantId, e.getMessage(), e);

@@ -49,21 +49,6 @@ public class ApiService {
         return response.getBody();
     }
 
-    public TransactionResponse getTodayTransactions(String merchantId) {
-        String url = baseUrl + "/api/v1/transactions/merchant/" + merchantId + "/today";
-        log.info("Calling external API: GET {}", url);
-        try {
-            TransactionResponse response = restTemplate.getForObject(url, TransactionResponse.class);
-            int count = response != null && response.getTransactions() != null
-                    ? response.getTransactions().size() : 0;
-            log.info("API success - Today's transactions for {}: {} items", merchantId, count);
-            return response;
-        } catch (Exception e) {
-            log.error("API call FAILED for getTodayTransactions (merchantId={}): {}", merchantId, e.getMessage(), e);
-            throw e;
-        }
-    }
-
     public TransactionResponse getTransactionsByDateRange(String merchantId, LocalDate from, LocalDate to, String status) {
         String url = baseUrl + "/api/v1/transactions/merchant/" + merchantId;
 

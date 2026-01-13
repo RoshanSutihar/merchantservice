@@ -78,7 +78,7 @@
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <p class="text-gray-500 text-sm">Today's Sales</p>
             <p class="text-3xl font-bold text-gray-800 mt-2">
-                $<span th:text="${summary?.todaysSales != null} ? ${#numbers.formatDecimal(summary.todaysSales, 0, 2, 'COMMA')} : '0.00'">0.00</span>
+                $<span th:text="${summary?.todaysSales != null} ? ${#numbers.formatDecimal(summary.todaysSales, 0, 2, 'POINT')} : '0.00'">0.00</span>
             </p>
         </div>
 
@@ -92,7 +92,7 @@
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <p class="text-gray-500 text-sm">Monthly Total</p>
             <p class="text-3xl font-bold text-green-700 mt-2">
-                $<span th:text="${summary?.monthlyTotal != null} ? ${#numbers.formatDecimal(summary.monthlyTotal, 0, 2, 'COMMA')} : '0.00'">0.00</span>
+                $<span th:text="${summary?.monthlyTotal != null} ? ${#numbers.formatDecimal(summary.monthlyTotal, 0, 2, 'POINT')} : '0.00'">0.00</span>
             </p>
         </div>
 
@@ -147,19 +147,19 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 <span th:if="${tx.amount != null}">
-                                    $<span th:text="${#numbers.formatDecimal(tx.amount, 0, 2, 'COMMA')}">2.15</span>
+                                    $<span th:text="${#numbers.formatDecimal(tx.amount, 0, 2, 'POINT')}">2.15</span>
                                 </span>
                                 <span th:if="${tx.amount == null}">$0.00</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                 <span th:if="${tx.commissionAmount != null}">
-                                    $<span th:text="${#numbers.formatDecimal(tx.commissionAmount, 0, 2, 'COMMA')}">0.65</span>
+                                    $<span th:text="${#numbers.formatDecimal(tx.commissionAmount, 0, 2, 'POINT')}">0.65</span>
                                 </span>
                                 <span th:if="${tx.commissionAmount == null}">$0.00</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-700">
                                 <span th:if="${tx.netAmount != null}">
-                                    $<span th:text="${#numbers.formatDecimal(tx.netAmount, 0, 2, 'COMMA')}">1.50</span>
+                                    $<span th:text="${#numbers.formatDecimal(tx.netAmount, 0, 2, 'POINT')}">1.50</span>
                                 </span>
                                 <span th:if="${tx.netAmount == null}">$0.00</span>
                             </td>
@@ -185,13 +185,13 @@
                         <tr>
                             <td colspan="2" class="px-6 py-4 text-right text-gray-700">Total:</td>
                             <td class="px-6 py-4 text-gray-900">
-                                $<span th:text="${#numbers.formatDecimal(totalAmount, 0, 2, 'COMMA')}">0.00</span>
+                                $<span th:text="${#numbers.formatDecimal(totalAmount, 0, 2, 'POINT')}">0.00</span>
                             </td>
                             <td class="px-6 py-4 text-gray-700">
-                                $<span th:text="${#numbers.formatDecimal(totalCommission, 0, 2, 'COMMA')}">0.00</span>
+                                $<span th:text="${#numbers.formatDecimal(totalCommission, 0, 2, 'POINT')}">0.00</span>
                             </td>
                             <td class="px-6 py-4 text-green-700 font-semibold">
-                                $<span th:text="${#numbers.formatDecimal(totalNet, 0, 2, 'COMMA')}">0.00</span>
+                                $<span th:text="${#numbers.formatDecimal(totalNet, 0, 2, 'POINT')}">0.00</span>
                             </td>
                             <td></td>
                         </tr>
@@ -276,19 +276,19 @@
                         <div class="bg-gray-50 rounded-lg p-4">
                             <p class="text-gray-500 text-sm">Total Amount</p>
                             <p class="text-2xl font-bold text-gray-800">
-                                $<span th:text="${summary.totalAmount != null} ? ${#numbers.formatDecimal(summary.totalAmount, 0, 2, 'COMMA')} : '0.00'">0.00</span>
+                                $<span th:text="${summary.totalAmount != null} ? ${#numbers.formatDecimal(summary.totalAmount, 0, 2, 'POINT')} : '0.00'">0.00</span>
                             </p>
                         </div>
                         <div class="bg-gray-50 rounded-lg p-4">
                             <p class="text-gray-500 text-sm">Total Commission</p>
                             <p class="text-2xl font-bold text-gray-800">
-                                $<span th:text="${summary.totalCommission != null} ? ${#numbers.formatDecimal(summary.totalCommission, 0, 2, 'COMMA')} : '0.00'">0.00</span>
+                                $<span th:text="${summary.totalCommission != null} ? ${#numbers.formatDecimal(summary.totalCommission, 0, 2, 'POINT')} : '0.00'">0.00</span>
                             </p>
                         </div>
                         <div class="bg-gray-50 rounded-lg p-4">
                             <p class="text-gray-500 text-sm">Net Amount</p>
                             <p class="text-2xl font-bold text-green-700">
-                                $<span th:text="${summary.totalNetAmount != null} ? ${#numbers.formatDecimal(summary.totalNetAmount, 0, 2, 'COMMA')} : '0.00'">0.00</span>
+                                $<span th:text="${summary.totalNetAmount != null} ? ${#numbers.formatDecimal(summary.totalNetAmount, 0, 2, 'POINT')} : '0.00'">0.00</span>
                             </p>
                         </div>
                     </div>
