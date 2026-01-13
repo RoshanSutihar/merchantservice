@@ -98,150 +98,104 @@
 
     </div>
 
-    <!-- Tabs -->
+    <!-- Today's Transactions Section (no tabs) -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-        <div class="border-b border-gray-200">
-            <nav class="flex flex-wrap">
-                <button id="todayTab" class="px-6 py-4 font-medium text-sm border-b-2 border-purple-primary text-purple-primary focus:outline-none">
-                    Today's Transactions
-                </button>
-                <button id="rangeTab" class="px-6 py-4 font-medium text-sm text-gray-500 hover:text-gray-700 focus:outline-none">
-                    Date Range
-                </button>
-            </nav>
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h2 class="text-xl font-bold text-gray-800">Today's Transactions</h2>
         </div>
 
         <div class="p-6">
-            <!-- TODAY'S TRANSACTIONS TAB -->
-            <div id="todayContent">
-                <form th:action="@{/transactions/today}" method="post" class="mb-6">
-                    <input type="hidden" name="merchantId" th:value="${selectedMerchant}" />
-                    <input type="hidden" name="refresh" value="true" />
-                    <button type="submit" class="bg-purple-gradient text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition duration-200">
-                        Refresh Today's Transactions
-                    </button>
-                </form>
+            <form th:action="@{/transactions/today}" method="post" class="mb-6">
+                <input type="hidden" name="merchantId" th:value="${selectedMerchant}" />
+                <input type="hidden" name="refresh" value="true" />
+                <button type="submit" class="bg-purple-gradient text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition duration-200">
+                    Refresh Today's Transactions
+                </button>
+            </form>
 
-                <div th:if="${transactions != null and transactions.transactions != null and !transactions.transactions.isEmpty()}" class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ref</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commission</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Payment</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                        <tr th:each="tx : ${transactions.transactions}" class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <span th:if="${tx.createdAt != null}" th:text="${#temporals.format(tx.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-12 16:21</span>
-                                <span th:if="${tx.createdAt == null}">N/A</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <code class="bg-gray-100 px-2 py-1 rounded" th:text="${tx.transactionRef}">TXN_1768234829918</code>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                <span th:if="${tx.amount != null}">
-                                    $<span th:text="${#numbers.formatDecimal(tx.amount, 0, 2, 'POINT')}">6.46</span>
+            <div th:if="${transactions != null and transactions.transactions != null and !transactions.transactions.isEmpty()}" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ref</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commission</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Payment</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tr th:each="tx : ${transactions.transactions}" class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span th:if="${tx.createdAt != null}" th:text="${#temporals.format(tx.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-12 16:21</span>
+                            <span th:if="${tx.createdAt == null}">N/A</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <code class="bg-gray-100 px-2 py-1 rounded" th:text="${tx.transactionRef}">TXN_1768234829918</code>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <span th:if="${tx.amount != null}">
+                                $<span th:text="${#numbers.formatDecimal(tx.amount, 0, 2, 'POINT')}">6.46</span>
+                            </span>
+                            <span th:if="${tx.amount == null}">$0.00</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            <span th:if="${tx.commissionAmount != null}">
+                                $<span th:text="${#numbers.formatDecimal(tx.commissionAmount, 0, 2, 'POINT')}">1.94</span>
+                            </span>
+                            <span th:if="${tx.commissionAmount == null}">$0.00</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-700">
+                            <span th:if="${tx.netAmount != null}">
+                                $<span th:text="${#numbers.formatDecimal(tx.netAmount, 0, 2, 'POINT')}">4.52</span>
+                            </span>
+                            <span th:if="${tx.netAmount == null}">$0.00</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span th:if="${tx.status != null}">
+                                <span th:switch="${tx.status}"
+                                      class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                    <span th:case="'ACKNOWLEDGED'" class="bg-blue-100 text-blue-800">ACKNOWLEDGED</span>
+                                    <span th:case="'SETTLED'" class="bg-green-100 text-green-800">SETTLED</span>
+                                    <span th:case="'PENDING'" class="bg-yellow-100 text-yellow-800">PENDING</span>
+                                    <span th:case="'FAILED'" class="bg-red-100 text-red-800">FAILED</span>
+                                    <span th:case="*" class="bg-gray-100 text-gray-800">UNKNOWN</span>
                                 </span>
-                                <span th:if="${tx.amount == null}">$0.00</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                <span th:if="${tx.commissionAmount != null}">
-                                    $<span th:text="${#numbers.formatDecimal(tx.commissionAmount, 0, 2, 'POINT')}">1.94</span>
-                                </span>
-                                <span th:if="${tx.commissionAmount == null}">$0.00</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-700">
-                                <span th:if="${tx.netAmount != null}">
-                                    $<span th:text="${#numbers.formatDecimal(tx.netAmount, 0, 2, 'POINT')}">4.52</span>
-                                </span>
-                                <span th:if="${tx.netAmount == null}">$0.00</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span th:if="${tx.status != null}">
-                                    <span th:switch="${tx.status}"
-                                          class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                        <span th:case="'ACKNOWLEDGED'" class="bg-blue-100 text-blue-800">ACKNOWLEDGED</span>
-                                        <span th:case="'SETTLED'" class="bg-green-100 text-green-800">SETTLED</span>
-                                        <span th:case="'PENDING'" class="bg-yellow-100 text-yellow-800">PENDING</span>
-                                        <span th:case="'FAILED'" class="bg-red-100 text-red-800">FAILED</span>
-                                        <span th:case="*" class="bg-gray-100 text-gray-800">UNKNOWN</span>
-                                    </span>
-                                </span>
-                                <span th:if="${tx.status == null}" class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                    UNKNOWN
-                                </span>
-                            </td>
-                        </tr>
-                        </tbody>
-                        <!-- Totals Row -->
-                        <tfoot class="bg-gray-50 font-medium">
-                        <tr>
-                            <td colspan="2" class="px-6 py-4 text-right text-gray-700">Total:</td>
-                            <td class="px-6 py-4 text-gray-900">
-                                $<span th:text="${#numbers.formatDecimal(totalAmount, 0, 2, 'POINT')}">0.00</span>
-                            </td>
-                            <td class="px-6 py-4 text-gray-700">
-                                $<span th:text="${#numbers.formatDecimal(totalCommission, 0, 2, 'POINT')}">0.00</span>
-                            </td>
-                            <td class="px-6 py-4 text-green-700 font-semibold">
-                                $<span th:text="${#numbers.formatDecimal(totalNet, 0, 2, 'POINT')}">0.00</span>
-                            </td>
-                            <td></td>
-                        </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                <div th:if="${transactions == null or transactions.transactions == null or transactions.transactions.isEmpty()}"
-                     class="text-center py-12 text-gray-500">
-                    <p class="text-lg">No transactions found for today</p>
-                    <p class="mt-2">Try again later or check other date ranges</p>
-                </div>
+                            </span>
+                            <span th:if="${tx.status == null}" class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                UNKNOWN
+                            </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <!-- Totals Row -->
+                    <tfoot class="bg-gray-50 font-medium">
+                    <tr>
+                        <td colspan="2" class="px-6 py-4 text-right text-gray-700">Total:</td>
+                        <td class="px-6 py-4 text-gray-900">
+                            $<span th:text="${#numbers.formatDecimal(totalAmount, 0, 2, 'POINT')}">0.00</span>
+                        </td>
+                        <td class="px-6 py-4 text-gray-700">
+                            $<span th:text="${#numbers.formatDecimal(totalCommission, 0, 2, 'POINT')}">0.00</span>
+                        </td>
+                        <td class="px-6 py-4 text-green-700 font-semibold">
+                            $<span th:text="${#numbers.formatDecimal(totalNet, 0, 2, 'POINT')}">0.00</span>
+                        </td>
+                        <td></td>
+                    </tr>
+                    </tfoot>
+                </table>
             </div>
 
-            <!-- DATE RANGE TAB -->
-            <div id="rangeContent" style="display: none;">
-                <p class="text-gray-600 mb-4">Select date range to view detailed transactions</p>
-                <form th:action="@{/transactions/range}" method="post" class="mb-6">
-                    <input type="hidden" name="merchantId" th:value="${selectedMerchant}" />
-                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-                            <input type="date" name="fromDate" th:value="${fromDate}"
-                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 px-3 py-2 border">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
-                            <input type="date" name="toDate" th:value="${toDate}"
-                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 px-3 py-2 border">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status (Optional)</label>
-                            <select name="status" th:value="${selectedStatus}"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 px-3 py-2 border">
-                                <option value="">All Statuses</option>
-                                <option value="PENDING">Pending</option>
-                                <option value="ACKNOWLEDGED">Acknowledged</option>
-                                <option value="SETTLED">Settled</option>
-                                <option value="FAILED">Failed</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end">
-                            <button type="submit" class="bg-purple-gradient text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 transition duration-200">
-                                Filter Transactions
-                            </button>
-                        </div>
-                    </div>
-                </form>
+            <div th:if="${transactions == null or transactions.transactions == null or transactions.transactions.isEmpty()}"
+                 class="text-center py-12 text-gray-500">
+                <p class="text-lg">No transactions found for today</p>
+                <p class="mt-2">Please try refreshing or check back later</p>
             </div>
-
         </div>
     </div>
+
 </main>
 
 <footer class="bg-white border-t border-gray-200 py-6 mt-auto">
@@ -249,45 +203,6 @@
         © 2026 QRPay USA • Merchant Portal
     </div>
 </footer>
-
-<script>
-    // Simple tab switching
-    document.addEventListener('DOMContentLoaded', function() {
-        const todayTab = document.getElementById('todayTab');
-        const rangeTab = document.getElementById('rangeTab');
-
-        const todayContent = document.getElementById('todayContent');
-        const rangeContent = document.getElementById('rangeContent');
-
-        function showToday() {
-            todayContent.style.display = 'block';
-            rangeContent.style.display = 'none';
-
-            todayTab.classList.add('border-b-2', 'border-purple-primary', 'text-purple-primary');
-            todayTab.classList.remove('text-gray-500');
-
-            rangeTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
-            rangeTab.classList.add('text-gray-500');
-        }
-
-        function showRange() {
-            todayContent.style.display = 'none';
-            rangeContent.style.display = 'block';
-
-            rangeTab.classList.add('border-b-2', 'border-purple-primary', 'text-purple-primary');
-            rangeTab.classList.remove('text-gray-500');
-
-            todayTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
-            todayTab.classList.add('text-gray-500');
-        }
-
-        todayTab.addEventListener('click', showToday);
-        rangeTab.addEventListener('click', showRange);
-
-        // Start with Today's Transactions shown by default
-        showToday();
-    });
-</script>
 
 </body>
 </html>
