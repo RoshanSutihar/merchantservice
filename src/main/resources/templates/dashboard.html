@@ -58,7 +58,7 @@
                 <p class="text-gray-500 text-sm">Commission Rate</p>
                 <p class="text-lg font-semibold">
                     <span th:if="${merchant?.commissionType != null}"
-                          th:text="${merchant.commissionType} + ' - ' + ${merchant.commissionValue}">Fixed - 2.5%</span>
+                          th:text="${merchant.commissionType} + ' - ' + ${merchant.commissionValue}">Percentage - 0.30</span>
                     <span th:if="${merchant?.commissionType == null}">Not set</span>
                 </p>
             </div>
@@ -68,7 +68,7 @@
     <!-- Quick Stats -->
     <div class="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
-        <!-- Today's Transactions -->
+        <!-- Today's Transactions Count -->
         <div class="bg-purple-gradient text-white rounded-xl shadow-lg p-6">
             <p class="text-sm opacity-90">Today's Transactions</p>
             <p class="text-3xl font-bold mt-2" th:text="${summary?.todaysTransactionCount ?: 0}">0</p>
@@ -82,7 +82,7 @@
             </p>
         </div>
 
-        <!-- Acknowledged -->
+        <!-- Acknowledged Count -->
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <p class="text-gray-500 text-sm">Acknowledged</p>
             <p class="text-3xl font-bold text-blue-700 mt-2" th:text="${summary?.acknowledgedCount ?: 0}">0</p>
@@ -107,9 +107,6 @@
                 </button>
                 <button id="rangeTab" class="px-6 py-4 font-medium text-sm text-gray-500 hover:text-gray-700 focus:outline-none">
                     Date Range
-                </button>
-                <button id="summaryTab" class="px-6 py-4 font-medium text-sm text-gray-500 hover:text-gray-700 focus:outline-none">
-                    Summary
                 </button>
             </nav>
         </div>
@@ -140,27 +137,27 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                         <tr th:each="tx : ${transactions.transactions}" class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <span th:if="${tx.createdAt != null}" th:text="${#temporals.format(tx.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-12 04:01</span>
+                                <span th:if="${tx.createdAt != null}" th:text="${#temporals.format(tx.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-12 16:21</span>
                                 <span th:if="${tx.createdAt == null}">N/A</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <code class="bg-gray-100 px-2 py-1 rounded" th:text="${tx.transactionRef}">TXN_123456789</code>
+                                <code class="bg-gray-100 px-2 py-1 rounded" th:text="${tx.transactionRef}">TXN_1768234829918</code>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 <span th:if="${tx.amount != null}">
-                                    $<span th:text="${#numbers.formatDecimal(tx.amount, 0, 2, 'POINT')}">2.15</span>
+                                    $<span th:text="${#numbers.formatDecimal(tx.amount, 0, 2, 'POINT')}">6.46</span>
                                 </span>
                                 <span th:if="${tx.amount == null}">$0.00</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                 <span th:if="${tx.commissionAmount != null}">
-                                    $<span th:text="${#numbers.formatDecimal(tx.commissionAmount, 0, 2, 'POINT')}">0.65</span>
+                                    $<span th:text="${#numbers.formatDecimal(tx.commissionAmount, 0, 2, 'POINT')}">1.94</span>
                                 </span>
                                 <span th:if="${tx.commissionAmount == null}">$0.00</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-700">
                                 <span th:if="${tx.netAmount != null}">
-                                    $<span th:text="${#numbers.formatDecimal(tx.netAmount, 0, 2, 'POINT')}">1.50</span>
+                                    $<span th:text="${#numbers.formatDecimal(tx.netAmount, 0, 2, 'POINT')}">4.52</span>
                                 </span>
                                 <span th:if="${tx.netAmount == null}">$0.00</span>
                             </td>
@@ -225,7 +222,8 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status (Optional)</label>
-                            <select name="status" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 px-3 py-2 border">
+                            <select name="status" th:value="${selectedStatus}"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 px-3 py-2 border">
                                 <option value="">All Statuses</option>
                                 <option value="PENDING">Pending</option>
                                 <option value="ACKNOWLEDGED">Acknowledged</option>
@@ -242,59 +240,6 @@
                 </form>
             </div>
 
-            <!-- SUMMARY TAB -->
-            <div id="summaryContent" style="display: none;">
-                <p class="text-gray-600 mb-4">Generate summary report for selected period</p>
-                <form th:action="@{/transactions/summary}" method="post" class="mb-6">
-                    <input type="hidden" name="merchantId" th:value="${selectedMerchant}" />
-                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-                            <input type="date" name="fromDate" th:value="${fromDate}"
-                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 px-3 py-2 border">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
-                            <input type="date" name="toDate" th:value="${toDate}"
-                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 px-3 py-2 border">
-                        </div>
-                        <div class="flex items-end">
-                            <button type="submit" class="bg-purple-gradient text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 transition duration-200">
-                                Generate Summary
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                <!-- Summary Results (will be populated after form submission) -->
-                <div th:if="${view == 'summary' and summary != null}" class="mt-8">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Summary Report</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-500 text-sm">Total Transactions</p>
-                            <p class="text-2xl font-bold text-gray-800" th:text="${summary.totalTransactions ?: 0}">0</p>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-500 text-sm">Total Amount</p>
-                            <p class="text-2xl font-bold text-gray-800">
-                                $<span th:text="${summary.totalAmount != null} ? ${#numbers.formatDecimal(summary.totalAmount, 0, 2, 'POINT')} : '0.00'">0.00</span>
-                            </p>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-500 text-sm">Total Commission</p>
-                            <p class="text-2xl font-bold text-gray-800">
-                                $<span th:text="${summary.totalCommission != null} ? ${#numbers.formatDecimal(summary.totalCommission, 0, 2, 'POINT')} : '0.00'">0.00</span>
-                            </p>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-500 text-sm">Net Amount</p>
-                            <p class="text-2xl font-bold text-green-700">
-                                $<span th:text="${summary.totalNetAmount != null} ? ${#numbers.formatDecimal(summary.totalNetAmount, 0, 2, 'POINT')} : '0.00'">0.00</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </main>
@@ -310,60 +255,37 @@
     document.addEventListener('DOMContentLoaded', function() {
         const todayTab = document.getElementById('todayTab');
         const rangeTab = document.getElementById('rangeTab');
-        const summaryTab = document.getElementById('summaryTab');
 
         const todayContent = document.getElementById('todayContent');
         const rangeContent = document.getElementById('rangeContent');
-        const summaryContent = document.getElementById('summaryContent');
 
         function showToday() {
             todayContent.style.display = 'block';
             rangeContent.style.display = 'none';
-            summaryContent.style.display = 'none';
 
             todayTab.classList.add('border-b-2', 'border-purple-primary', 'text-purple-primary');
             todayTab.classList.remove('text-gray-500');
 
             rangeTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
             rangeTab.classList.add('text-gray-500');
-
-            summaryTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
-            summaryTab.classList.add('text-gray-500');
         }
 
         function showRange() {
             todayContent.style.display = 'none';
             rangeContent.style.display = 'block';
-            summaryContent.style.display = 'none';
 
             rangeTab.classList.add('border-b-2', 'border-purple-primary', 'text-purple-primary');
             rangeTab.classList.remove('text-gray-500');
 
             todayTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
             todayTab.classList.add('text-gray-500');
-
-            summaryTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
-            summaryTab.classList.add('text-gray-500');
-        }
-
-        function showSummary() {
-            todayContent.style.display = 'none';
-            rangeContent.style.display = 'none';
-            summaryContent.style.display = 'block';
-
-            summaryTab.classList.add('border-b-2', 'border-purple-primary', 'text-purple-primary');
-            summaryTab.classList.remove('text-gray-500');
-
-            todayTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
-            todayTab.classList.add('text-gray-500');
-
-            rangeTab.classList.remove('border-b-2', 'border-purple-primary', 'text-purple-primary');
-            rangeTab.classList.add('text-gray-500');
         }
 
         todayTab.addEventListener('click', showToday);
         rangeTab.addEventListener('click', showRange);
-        summaryTab.addEventListener('click', showSummary);
+
+        // Start with Today's Transactions shown by default
+        showToday();
     });
 </script>
 

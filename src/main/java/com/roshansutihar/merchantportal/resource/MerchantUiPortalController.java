@@ -32,8 +32,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
-
-
 @Controller
 public class MerchantUiPortalController {
 
@@ -44,8 +42,6 @@ public class MerchantUiPortalController {
 
     private static final Logger log = LoggerFactory.getLogger(MerchantUiPortalController.class);
 
-    // Chicago timezone constant
-    private static final ZoneId CHICAGO_ZONE = ZoneId.of("America/Chicago");
     // UTC timezone constant
     private static final ZoneId UTC_ZONE = ZoneId.of("UTC");
 
@@ -116,18 +112,12 @@ public class MerchantUiPortalController {
             model.addAttribute("merchant", merchant);
             model.addAttribute("selectedMerchant", merchantId);
 
-            // FIX: Get transactions for Chicago "today" (midnight to midnight Chicago time)
-            LocalDate todayChicago = LocalDate.now(CHICAGO_ZONE);
+            // FIXED: Use UTC date directly since API expects UTC
+            LocalDate todayUTC = LocalDate.now(UTC_ZONE);
 
-            // Convert Chicago date to UTC for API call
-            ZonedDateTime startChicago = todayChicago.atStartOfDay(CHICAGO_ZONE);
-            ZonedDateTime endChicago = todayChicago.plusDays(1).atStartOfDay(CHICAGO_ZONE).minusSeconds(1);
-
-            LocalDate startDateUTC = startChicago.withZoneSameInstant(UTC_ZONE).toLocalDate();
-            LocalDate endDateUTC = endChicago.withZoneSameInstant(UTC_ZONE).toLocalDate();
-
+            // Get transactions for UTC "today" (midnight to midnight UTC time)
             TransactionResponse todayTransactions = apiService.getTransactionsByDateRange(
-                    merchantId, startDateUTC, endDateUTC, null
+                    merchantId, todayUTC, todayUTC, null
             );
 
             double totalAmount = 0.0;
@@ -147,10 +137,10 @@ public class MerchantUiPortalController {
             model.addAttribute("totalNet", totalNet);
             model.addAttribute("transactions", todayTransactions);
 
-            // Summary statistics
-            LocalDate monthStart = todayChicago.withDayOfMonth(1);
-            SummaryResponse todaySummary = apiService.getSummary(merchantId, todayChicago, todayChicago);
-            SummaryResponse monthSummary = apiService.getSummary(merchantId, monthStart, todayChicago);
+            // Summary statistics - also use UTC dates
+            LocalDate monthStartUTC = todayUTC.withDayOfMonth(1);
+            SummaryResponse todaySummary = apiService.getSummary(merchantId, todayUTC, todayUTC);
+            SummaryResponse monthSummary = apiService.getSummary(merchantId, monthStartUTC, todayUTC);
 
             // Build dashboard summary
             DashboardSummary summary = new DashboardSummary();
@@ -185,13 +175,14 @@ public class MerchantUiPortalController {
 
             model.addAttribute("summary", summary);
 
-            // Form defaults
+            // Form defaults - display UTC dates in the UI
             model.addAttribute("view", "today");
-            model.addAttribute("fromDate", todayChicago);
-            model.addAttribute("toDate", todayChicago);
+            model.addAttribute("fromDate", todayUTC);
+            model.addAttribute("toDate", todayUTC);
             model.addAttribute("selectedStatus", "");
 
         } catch (Exception e) {
+            log.error("Error loading dashboard for siteId: {}", siteId, e);
             model.addAttribute("error", "Unable to load dashboard: " + e.getMessage());
             model.addAttribute("totalAmount", 0.0);
             model.addAttribute("totalCommission", 0.0);
@@ -369,6 +360,7 @@ public class MerchantUiPortalController {
             return "register-merchant";
 
         } catch (Exception e) {
+            log.error("Error registering merchant", e);
             model.addAttribute("error", "Failed to register merchant: " + e.getMessage());
             return "register-merchant";
         }
@@ -377,23 +369,17 @@ public class MerchantUiPortalController {
     @PostMapping("/transactions/today")
     public String getTodayTransactions(@RequestParam String merchantId, Model model, Authentication authentication) {
         try {
-            LocalDate todayChicago = LocalDate.now(CHICAGO_ZONE);
-
-            // Convert Chicago date to UTC for API call
-            ZonedDateTime startChicago = todayChicago.atStartOfDay(CHICAGO_ZONE);
-            ZonedDateTime endChicago = todayChicago.plusDays(1).atStartOfDay(CHICAGO_ZONE).minusSeconds(1);
-
-            LocalDate startDateUTC = startChicago.withZoneSameInstant(UTC_ZONE).toLocalDate();
-            LocalDate endDateUTC = endChicago.withZoneSameInstant(UTC_ZONE).toLocalDate();
+            // FIXED: Use UTC date directly
+            LocalDate todayUTC = LocalDate.now(UTC_ZONE);
 
             TransactionResponse response = apiService.getTransactionsByDateRange(
-                    merchantId, startDateUTC, endDateUTC, null
+                    merchantId, todayUTC, todayUTC, null
             );
 
-            // Get summary data
-            SummaryResponse todaySummary = apiService.getSummary(merchantId, todayChicago, todayChicago);
-            LocalDate monthStart = todayChicago.withDayOfMonth(1);
-            SummaryResponse monthSummary = apiService.getSummary(merchantId, monthStart, todayChicago);
+            // Get summary data using UTC dates
+            SummaryResponse todaySummary = apiService.getSummary(merchantId, todayUTC, todayUTC);
+            LocalDate monthStartUTC = todayUTC.withDayOfMonth(1);
+            SummaryResponse monthSummary = apiService.getSummary(merchantId, monthStartUTC, todayUTC);
 
             // Calculate totals
             double totalAmount = 0.0;
@@ -451,11 +437,12 @@ public class MerchantUiPortalController {
             model.addAttribute("totalCommission", totalCommission);
             model.addAttribute("totalNet", totalNet);
             model.addAttribute("view", "today");
-            model.addAttribute("fromDate", todayChicago);
-            model.addAttribute("toDate", todayChicago);
+            model.addAttribute("fromDate", todayUTC);
+            model.addAttribute("toDate", todayUTC);
             model.addAttribute("selectedStatus", "");
 
         } catch (Exception e) {
+            log.error("Error fetching today's transactions for merchant: {}", merchantId, e);
             model.addAttribute("error", "Error fetching today's transactions: " + e.getMessage());
         }
         return "dashboard";
@@ -470,6 +457,8 @@ public class MerchantUiPortalController {
             Model model) {
 
         try {
+            // Note: The dates from the form are assumed to be in UTC already
+            // If your users are selecting dates in their local timezone, you'd need to convert them
             TransactionResponse response = apiService.getTransactionsByDateRange(merchantId, fromDate, toDate, status);
 
             model.addAttribute("transactions", response);
@@ -479,6 +468,7 @@ public class MerchantUiPortalController {
             model.addAttribute("selectedStatus", status != null ? status : "");
             model.addAttribute("view", "range");
         } catch (Exception e) {
+            log.error("Error fetching transactions by range for merchant: {}", merchantId, e);
             model.addAttribute("error", "Error fetching transactions: " + e.getMessage());
         }
         return "dashboard";
@@ -500,6 +490,7 @@ public class MerchantUiPortalController {
             model.addAttribute("toDate", toDate);
             model.addAttribute("view", "summary");
         } catch (Exception e) {
+            log.error("Error fetching summary for merchant: {}", merchantId, e);
             model.addAttribute("error", "Error fetching summary: " + e.getMessage());
         }
         return "dashboard";
