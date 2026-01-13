@@ -9,5 +9,7 @@ import java.util.List;
 @Data
 public class TransactionResponse {
     private String merchantId;
-    private List<TransactionDTO> transactions;
+    private List<Transaction> transactions; // Changed from TransactionDTO to Transaction
+    private Long totalCount;
+    private Double totalAmount;
 }

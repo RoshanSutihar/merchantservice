@@ -5,6 +5,7 @@ import com.roshansutihar.merchantportal.dto.DashboardSummary;
 import com.roshansutihar.merchantportal.dto.TransactionDTO;
 import com.roshansutihar.merchantportal.entity.Merchant;
 import com.roshansutihar.merchantportal.repository.MerchantRepository;
+import com.roshansutihar.merchantportal.request.Transaction;
 import com.roshansutihar.merchantportal.response.MerchantResponse;
 import com.roshansutihar.merchantportal.response.SummaryResponse;
 import com.roshansutihar.merchantportal.response.TransactionResponse;
@@ -137,7 +138,7 @@ public class MerchantUiPortalController {
                 double totalCommission = 0.0;
                 double totalNet = 0.0;
 
-                for (TransactionDTO tx : todayTransactions.getTransactions()) {
+                for (Transaction tx : todayTransactions.getTransactions()) { // Changed to Transaction
                     totalAmount += tx.getAmount() != null ? tx.getAmount() : 0.0;
                     totalCommission += tx.getCommissionAmount() != null ? tx.getCommissionAmount() : 0.0;
                     totalNet += tx.getNetAmount() != null ? tx.getNetAmount() : 0.0;
